@@ -1,13 +1,14 @@
 # Argon City
 
-**Argon City** is a self-contained, real-time 3D procedural city micro-simulation built with **Three.js** and vanilla HTML/CSS/JavaScript. Everything runs in a single `index.html` file with zero build steps or external local assets.
+**Argon City** is a self-contained, real-time 3D procedural city micro-simulation and interactive driving sandbox built with **Three.js** and vanilla HTML/CSS/JavaScript. Everything runs in a single `index.html` file with zero build steps or external local assets.
 
 ## ✨ Features
 
 - **Procedural Grid Architecture:** Generates a 6×6 urban grid with varied zoning (Residential, Office, Shop, and Skyscraper Towers), rooftop crowns, parks, sidewalks, and instanced emissive building windows.
-- **Intelligent Traffic & Pedestrians:** Autonomous vehicles obey right-hand lanes, brake for cars ahead, turn at intersections, and respect synchronized red/yellow/green traffic light cycles alongside sidewalk pedestrians.
-- **Dynamic Day–Night Cycle:** Smoothly interpolates sky colors, atmospheric fog, sun/moon orbits, and directional shadows while automatically illuminating building windows, streetlamps, and car headlights at dusk.
-- **Interactive Building Inspector:** Click any building to highlight its footprint and inspect its generated name, zoning classification, floor count, dimensions, and occupancy.
+- **Interactive & Drivable Vehicles:** Every car on the grid can be clicked, inspected, and driven in real time with smooth arcade vehicle physics, speed-sensitive steering, AABB building collision detection, and a chase/top-down follow camera.
+- **Intelligent Traffic & Pedestrians:** Autonomous vehicles obey right-hand lanes, brake for cars ahead (including the player's car), turn at intersections, and respect synchronized red/yellow/green traffic light cycles alongside sidewalk pedestrians.
+- **Dynamic Day–Night Cycle:** Smoothly interpolates sky colors, atmospheric fog, sun/moon orbits, and directional shadows while automatically illuminating building windows, streetlamps, and car headlights (plus active spotlight beams on the player's car) at dusk.
+- **Interactive Building & Vehicle Inspectors:** Click any building or car to highlight it and inspect live telemetry or structural stats.
 - **High-Performance Rendering:** Uses `THREE.InstancedMesh` for windows, road markings, crosswalks, trees, and streetlamps to maintain a smooth ~60 FPS on modern laptops.
 
 ## 🚀 How to Run
@@ -17,14 +18,27 @@
 
 ## 🎮 Controls
 
+### Camera & City Inspection
 | Input | Action |
 | :--- | :--- |
 | **Left Click + Drag** | Orbit camera around the city |
 | **Right Click + Drag** | Pan camera across the grid |
 | **Scroll Wheel** | Zoom in and out |
 | **Click Building** | Open building details panel |
-| **Click Empty Space / `×`** | Dismiss building details panel |
+| **Click Any Car** | Select car, view live telemetry, and click **Drive This Car** |
+| **Click Empty Space / `×`** | Dismiss active inspector panel |
 | **HUD Controls** | Adjust simulation speed (`0.0x` – `5.0x`) or regenerate a new city seed |
+
+### Driving Mode
+| Input | Action |
+| :--- | :--- |
+| **`W` / `Up Arrow`** | Accelerate forward |
+| **`S` / `Down Arrow`** | Brake / Reverse |
+| **`A` / `D` or `Left` / `Right`** | Steer left / right (speed-sensitive) |
+| **`Space`** | Handbrake |
+| **`C`** | Toggle between **Chase** and **Top-Down** follow camera |
+| **`Esc` or `Exit Car` Button** | Exit vehicle, return car to AI lane control, and restore Orbit camera |
+| **Touch Controls (Mobile)** | On-screen directional and brake buttons appear automatically when driving |
 
 ## 🤖 Credits
 

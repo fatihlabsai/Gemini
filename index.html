@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Argon City — 3D Procedural City Simulation</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f19'/%3E%3Cpath d='M12 52V26l14-8 14 8v26H12z' fill='%230284c7'/%3E%3Cpath d='M34 52V14l18 10v28H34z' fill='%2338bdf8'/%3E%3Ccircle cx='20' cy='34' r='2.5' fill='%23fef08a'/%3E%3Ccircle cx='20' cy='42' r='2.5' fill='%23fef08a'/%3E%3Ccircle cx='43' cy='28' r='2.5' fill='%23fef08a'/%3E%3Ccircle cx='43' cy='36' r='2.5' fill='%23fef08a'/%3E%3Ccircle cx='43' cy='44' r='2.5' fill='%23fef08a'/%3E%3C/svg%3E" />
   <style>
     :root {
-      --bg-panel: rgba(15, 19, 28, 0.82);
+      --bg-panel: rgba(15, 19, 28, 0.84);
       --border-panel: rgba(255, 255, 255, 0.12);
       --accent: #38bdf8;
       --accent-hover: #0284c7;
+      --danger: #ef4444;
+      --success: #10b981;
       --text-main: #f1f5f9;
       --text-muted: #94a3b8;
     }
@@ -29,6 +32,7 @@
       background-color: #0b0f19;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
       color: var(--text-main);
+      touch-action: none;
     }
 
     #canvas-container {
@@ -37,7 +41,7 @@
       display: block;
     }
 
-    /* HUD Overlay */
+    /* HUD Overlay Panels */
     .hud-panel {
       position: absolute;
       background: var(--bg-panel);
@@ -54,6 +58,7 @@
       top: 20px;
       left: 20px;
       width: 310px;
+      z-index: 10;
     }
 
     .brand-title {
@@ -132,7 +137,6 @@
       width: 100%;
       padding: 10px 14px;
       background: linear-gradient(135deg, #0284c7, #2563eb);
-      hover: var(--accent-hover);
       color: #fff;
       border: none;
       border-radius: 8px;
@@ -154,6 +158,20 @@
       transform: scale(0.98);
     }
 
+    .btn-drive {
+      background: linear-gradient(135deg, #10b981, #059669);
+      margin-top: 12px;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
     .stats-bar {
       display: flex;
       justify-content: space-between;
@@ -164,18 +182,19 @@
       color: var(--text-muted);
     }
 
-    /* Info Panel (Right / Bottom-Right) */
-    #info-panel {
+    /* Right Inspector Panels (Building & Car) */
+    .inspector-panel {
       top: 20px;
       right: 20px;
-      width: 280px;
-      transform: translateX(320px);
+      width: 285px;
+      transform: translateX(330px);
       opacity: 0;
       transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
       pointer-events: none;
+      z-index: 10;
     }
 
-    #info-panel.visible {
+    .inspector-panel.visible {
       transform: translateX(0);
       opacity: 1;
       pointer-events: auto;
@@ -193,6 +212,17 @@
       font-weight: 700;
       color: #fff;
       line-height: 1.25;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      border: 1px solid rgba(255, 255, 255, 0.4);
     }
 
     .close-btn {
@@ -230,6 +260,12 @@
       border: 1px solid rgba(56, 189, 248, 0.35);
     }
 
+    .type-pill.car-pill {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -252,7 +288,152 @@
       margin-top: 2px;
     }
 
-    /* Controls Hint */
+    /* Drive Mode Dashboard HUD */
+    #drive-hud {
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%) translateY(150px);
+      opacity: 0;
+      width: min(560px, 94vw);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    #drive-hud.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .speedo-box {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      min-width: 115px;
+    }
+
+    #speedo-val {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .speedo-unit {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .gear-badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.2);
+      color: var(--accent);
+      margin-left: 4px;
+    }
+
+    .drive-meta {
+      flex: 1;
+      text-align: center;
+    }
+
+    #drive-car-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .drive-keys-hint {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .drive-keys-hint kbd {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: inherit;
+      color: #fff;
+      font-size: 0.7rem;
+    }
+
+    .drive-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .drive-actions .btn {
+      width: auto;
+      padding: 9px 13px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    /* Touch Controls for Mobile/Tablet */
+    #touch-controls {
+      position: absolute;
+      bottom: 105px;
+      left: 20px;
+      right: 20px;
+      display: none;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    #touch-controls.active {
+      display: flex;
+    }
+
+    .touch-cluster {
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .touch-cluster.vertical {
+      flex-direction: column;
+    }
+
+    .touch-btn {
+      width: 58px;
+      height: 58px;
+      border-radius: 14px;
+      background: rgba(15, 19, 28, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #fff;
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    .touch-btn:active, .touch-btn.pressed {
+      background: var(--accent);
+      color: #0b0f19;
+      border-color: #fff;
+    }
+
+    /* Bottom-Left Camera Controls Hint */
     #controls-hint {
       bottom: 18px;
       left: 20px;
@@ -260,11 +441,39 @@
       font-size: 0.76rem;
       color: var(--text-muted);
       border-radius: 8px;
+      transition: opacity 0.25s ease;
+      z-index: 5;
+    }
+
+    #controls-hint.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
     #controls-hint span {
       color: var(--text-main);
       font-weight: 500;
+    }
+
+    @media (max-width: 680px) {
+      #hud-top-left {
+        width: 250px;
+        padding: 12px 14px;
+      }
+      #drive-hud {
+        flex-wrap: wrap;
+        bottom: 12px;
+        padding: 12px 14px;
+      }
+      .drive-meta {
+        order: 3;
+        width: 100%;
+        flex: none;
+        margin-top: 4px;
+      }
+      #controls-hint {
+        display: none;
+      }
     }
   </style>
 
@@ -311,12 +520,12 @@
 
     <div class="stats-bar">
       <span id="seed-display">Seed: #8492</span>
-      <span id="entity-display">60 Cars · 80 Peds</span>
+      <span id="entity-display">56 Cars · 85 Peds</span>
     </div>
   </div>
 
   <!-- Right Building Inspector Panel -->
-  <div id="info-panel" class="hud-panel">
+  <div id="info-panel" class="hud-panel inspector-panel">
     <div class="info-header">
       <div id="b-name" class="info-title">Apex Tower</div>
       <button id="close-info" class="close-btn" title="Close">×</button>
@@ -342,9 +551,87 @@
     </div>
   </div>
 
+  <!-- Right Car Inspector Panel -->
+  <div id="car-panel" class="hud-panel inspector-panel">
+    <div class="info-header">
+      <div class="info-title">
+        <span id="c-swatch" class="color-swatch"></span>
+        <span id="c-name">Apex Cruiser</span>
+      </div>
+      <button id="close-car-info" class="close-btn" title="Close">×</button>
+    </div>
+    <div id="c-status-pill" class="type-pill car-pill">Autonomous Cruiser</div>
+    <div class="info-grid">
+      <div>
+        <div class="info-item-label">Current Speed</div>
+        <div id="c-speed" class="info-item-val">42 km/h</div>
+      </div>
+      <div>
+        <div class="info-item-label">Top Speed</div>
+        <div id="c-topspeed" class="info-item-val">108 km/h</div>
+      </div>
+      <div>
+        <div class="info-item-label">Heading</div>
+        <div id="c-heading" class="info-item-val">Northbound</div>
+      </div>
+      <div>
+        <div class="info-item-label">Unit ID</div>
+        <div id="c-id" class="info-item-val">EV-104</div>
+      </div>
+    </div>
+    <button id="drive-car-btn" class="btn btn-drive">
+      <span>🛞</span> Drive This Car
+    </button>
+  </div>
+
+  <!-- Bottom Center Driving Dashboard HUD -->
+  <div id="drive-hud" class="hud-panel">
+    <div class="speedo-box">
+      <span id="speedo-val">0</span>
+      <div>
+        <div class="speedo-unit">km/h</div>
+        <div id="gear-indicator" class="gear-badge">D</div>
+      </div>
+    </div>
+
+    <div class="drive-meta">
+      <div id="drive-car-title">Driving: Argon GT #12</div>
+      <div class="drive-keys-hint">
+        <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or <kbd>Arrows</kbd> Drive &nbsp;·&nbsp;
+        <kbd>Space</kbd> Brake &nbsp;·&nbsp;
+        <kbd>C</kbd> Camera &nbsp;·&nbsp;
+        <kbd>Esc</kbd> Exit
+      </div>
+    </div>
+
+    <div class="drive-actions">
+      <button id="cam-toggle-btn" class="btn btn-secondary" title="Toggle Camera View (C)">
+        🎥 <span id="cam-mode-label">Chase</span>
+      </button>
+      <button id="exit-drive-btn" class="btn btn-danger" title="Return to Orbit View (Esc)">
+        Exit Car
+      </button>
+    </div>
+  </div>
+
+  <!-- On-Screen Touch Controls for Mobile Devices -->
+  <div id="touch-controls">
+    <div class="touch-cluster">
+      <button class="touch-btn" id="t-left" aria-label="Steer Left">◀</button>
+      <button class="touch-btn" id="t-right" aria-label="Steer Right">▶</button>
+    </div>
+    <div class="touch-cluster">
+      <button class="touch-btn" id="t-handbrake" aria-label="Handbrake" style="font-size:0.8rem;">BRK</button>
+      <div class="touch-cluster vertical">
+        <button class="touch-btn" id="t-up" aria-label="Accelerate">▲</button>
+        <button class="touch-btn" id="t-down" aria-label="Reverse">▼</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Bottom-Left Camera Controls Hint -->
   <div id="controls-hint" class="hud-panel">
-    <span>Left Drag</span> Orbit &nbsp;·&nbsp; <span>Right Drag</span> Pan &nbsp;·&nbsp; <span>Scroll</span> Zoom &nbsp;·&nbsp; <span>Click Building</span> Inspect
+    <span>Left Drag</span> Orbit &nbsp;·&nbsp; <span>Right Drag</span> Pan &nbsp;·&nbsp; <span>Scroll</span> Zoom &nbsp;·&nbsp; <span>Click Building / Car</span> Inspect &amp; Drive
   </div>
 
   <script type="module">
@@ -385,6 +672,7 @@
     };
 
     const HALF_GRID = (CONFIG.gridCount * CONFIG.pitch) / 2; // 72
+    const CITY_BOUND = HALF_GRID + 3.2;
     const ROAD_COORDS = [];
     for (let i = 0; i <= CONFIG.gridCount; i++) {
       ROAD_COORDS.push(-HALF_GRID + i * CONFIG.pitch);
@@ -401,7 +689,7 @@
     scene.background = new THREE.Color(0x87ceeb);
     scene.fog = new THREE.FogExp2(0x87ceeb, 0.0038);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 800);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.8, 800);
     camera.position.set(115, 95, 135);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -417,7 +705,7 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
     controls.maxPolarAngle = Math.PI / 2 - 0.03; // Stay above ground
-    controls.minDistance = 20;
+    controls.minDistance = 12;
     controls.maxDistance = 340;
     controls.target.set(0, 8, 0);
 
@@ -444,7 +732,6 @@
     sunLight.shadow.bias = -0.0005;
     scene.add(sunLight);
 
-    // Celestial visual spheres (Sun & Moon)
     const celestialGroup = new THREE.Group();
     scene.add(celestialGroup);
 
@@ -494,22 +781,31 @@
       carTaillight: new THREE.MeshStandardMaterial({
         color: 0xef4444,
         emissive: 0xef4444,
-        emissiveIntensity: 0.4
+        emissiveIntensity: 0.5
+      }),
+      carTaillightBrake: new THREE.MeshStandardMaterial({
+        color: 0xff2222,
+        emissive: 0xff1111,
+        emissiveIntensity: 3.2
       }),
       carCabin: new THREE.MeshStandardMaterial({
         color: 0x0f172a,
         roughness: 0.2,
         metalness: 0.7
       }),
+      carWheel: new THREE.MeshStandardMaterial({
+        color: 0x111827,
+        roughness: 0.8
+      }),
       tlRed: new THREE.MeshStandardMaterial({ color: 0x450a0a, emissive: 0xff2222, emissiveIntensity: 0 }),
       tlYellow: new THREE.MeshStandardMaterial({ color: 0x422006, emissive: 0xfacc15, emissiveIntensity: 0 }),
       tlGreen: new THREE.MeshStandardMaterial({ color: 0x052e16, emissive: 0x22c55e, emissiveIntensity: 0 }),
       nsRed: null, nsYellow: null, nsGreen: null,
       ewRed: null, ewYellow: null, ewGreen: null,
-      highlight: new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.65 })
+      highlight: new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.65 }),
+      carHighlight: new THREE.MeshBasicMaterial({ color: 0x10b981, wireframe: true, transparent: true, opacity: 0.85 })
     };
 
-    // Clone traffic light materials for NS and EW directions so all intersections update in 0 draw call overhead
     MATS.nsRed = MATS.tlRed.clone();
     MATS.nsYellow = MATS.tlYellow.clone();
     MATS.nsGreen = MATS.tlGreen.clone();
@@ -518,24 +814,49 @@
     MATS.ewGreen = MATS.tlGreen.clone();
 
     // ==========================================
-    // 5. CITY GENERATION CONTAINERS
+    // 5. CITY GENERATION CONTAINERS & COLLIDERS
     // ==========================================
     const cityGroup = new THREE.Group();
     scene.add(cityGroup);
 
     let buildingHitBoxes = [];
+    let buildingColliders = []; // AABB boxes for car collision
+    let carHitBoxes = [];       // Invisible bounding hitboxes for easy car clicking
     let cars = [];
     let pedestrians = [];
     let selectionBoxMesh = null;
+    let carSelectionRing = null;
 
-    // Name generation tables
-    const PREFIXES = ['Argon', 'Nexus', 'Vanguard', 'Aether', 'Vertex', 'Solstice', 'Horizon', 'Obsidian', 'Kestrel', 'Meridian', 'Aurelia', 'Cobalt', 'Zenith', 'Orion', 'Helios', 'stratos'];
+    // Player & Driving state
+    let selectedCar = null;
+    let drivenCar = null;
+    let driveCamMode = 'chase'; // 'chase' or 'top'
+    let camReturnLerp = 0;
+    const savedOrbitPos = new THREE.Vector3();
+    const savedOrbitTarget = new THREE.Vector3();
+    let hasSavedOrbit = false;
+    let drivenCarHeadlightSpot = null;
+
+    const keys = {
+      up: false,
+      down: false,
+      left: false,
+      right: false,
+      space: false
+    };
+
+    const PREFIXES = ['Argon', 'Nexus', 'Vanguard', 'Aether', 'Vertex', 'Solstice', 'Horizon', 'Obsidian', 'Kestrel', 'Meridian', 'Aurelia', 'Cobalt', 'Zenith', 'Orion', 'Helios', 'Stratos'];
     const SUFFIXES = {
       Residential: ['Residences', 'Apartments', 'Lofts', 'Court', 'Gardens', 'Terrace', 'Commons'],
-      Office: ['Center', 'Plaza', 'Hub', 'Corporate', 'Exchange', 'Square', ' Chambers'],
+      Office: ['Center', 'Plaza', 'Hub', 'Corporate', 'Exchange', 'Square', 'Chambers'],
       Shop: ['Galleria', 'Market', 'Arcade', 'Bazaar', 'Pavilion', 'Corner', 'Emporium'],
-      Tower: ['Tower', 'Spire', 'Pinnacle', 'Citadel', 'Monolith', 'Heights', ' Obelisk']
+      Tower: ['Tower', 'Spire', 'Pinnacle', 'Citadel', 'Monolith', 'Heights', 'Obelisk']
     };
+
+    const CAR_MODELS = [
+      'Aether GT', 'Vortex S', 'pulse EV', 'Kestrel Roadster', 'Zenith Coupe',
+      'Cobalt Sedan', 'Stratos Turbo', 'Solstice Sport', 'Orion RS', 'Vector Hatchback'
+    ];
 
     const PALETTES = {
       Residential: [0xd97757, 0xe29578, 0xcab89d, 0x8d99ae, 0xb5838d, 0x9a8c98],
@@ -548,7 +869,6 @@
     // 6. BUILD STATIC ENVIRONMENT & ROAD GRID
     // ==========================================
     function buildBaseGroundAndRoads() {
-      // Surrounding dark earth plane
       const surroundGeo = new THREE.PlaneGeometry(900, 900);
       surroundGeo.rotateX(-Math.PI / 2);
       const surroundMat = new THREE.MeshStandardMaterial({ color: 0x161b22, roughness: 1.0 });
@@ -557,7 +877,6 @@
       surroundMesh.receiveShadow = true;
       cityGroup.add(surroundMesh);
 
-      // Asphalt base covering the entire grid
       const totalSpan = CONFIG.gridCount * CONFIG.pitch + CONFIG.roadWidth + 8;
       const roadBaseGeo = new THREE.BoxGeometry(totalSpan, 0.2, totalSpan);
       const roadBase = new THREE.Mesh(roadBaseGeo, MATS.asphalt);
@@ -565,7 +884,6 @@
       roadBase.receiveShadow = true;
       cityGroup.add(roadBase);
 
-      // Dashed Road Center Lines (InstancedMesh)
       const dashGeo = new THREE.PlaneGeometry(0.22, 2.2);
       dashGeo.rotateX(-Math.PI / 2);
       const dashMatrices = [];
@@ -576,13 +894,11 @@
         for (let b = 0; b < CONFIG.gridCount; b++) {
           const segCenter = -HALF_GRID + (b + 0.5) * CONFIG.pitch;
           for (let d = -6; d <= 6; d += 4) {
-            // North-South road segments
             dummy.position.set(roadCoord, 0.015, segCenter + d);
             dummy.rotation.set(0, 0, 0);
             dummy.updateMatrix();
             dashMatrices.push(dummy.matrix.clone());
 
-            // East-West road segments
             dummy.position.set(segCenter + d, 0.015, roadCoord);
             dummy.rotation.set(0, Math.PI / 2, 0);
             dummy.updateMatrix();
@@ -595,7 +911,6 @@
       dashMatrices.forEach((m, i) => dashInst.setMatrixAt(i, m));
       cityGroup.add(dashInst);
 
-      // Crosswalk stripes at intersections
       const cwGeo = new THREE.PlaneGeometry(0.4, 1.4);
       cwGeo.rotateX(-Math.PI / 2);
       const cwMatrices = [];
@@ -605,14 +920,12 @@
           const rx = ROAD_COORDS[ix];
           const rz = ROAD_COORDS[iz];
           for (let s = -2.0; s <= 2.0; s += 0.8) {
-            // North & South crosswalks
             [-3.6, 3.6].forEach(offsetZ => {
               dummy.position.set(rx + s, 0.016, rz + offsetZ);
               dummy.rotation.set(0, 0, 0);
               dummy.updateMatrix();
               cwMatrices.push(dummy.matrix.clone());
             });
-            // East & West crosswalks
             [-3.6, 3.6].forEach(offsetX => {
               dummy.position.set(rx + offsetX, 0.016, rz + s);
               dummy.rotation.set(0, Math.PI / 2, 0);
@@ -632,6 +945,7 @@
     // ==========================================
     function buildBlocksAndBuildings() {
       buildingHitBoxes = [];
+      buildingColliders = [];
 
       const sidewalkGeo = new THREE.BoxGeometry(CONFIG.blockSize, 0.22, CONFIG.blockSize);
       const grassGeo = new THREE.BoxGeometry(CONFIG.blockSize - 2.4, 0.26, CONFIG.blockSize - 2.4);
@@ -650,22 +964,18 @@
           const cx = -HALF_GRID + (gx + 0.5) * CONFIG.pitch;
           const cz = -HALF_GRID + (gz + 0.5) * CONFIG.pitch;
 
-          // Sidewalk slab
           dummy.position.set(cx, 0.11, cz);
           dummy.rotation.set(0, 0, 0);
           dummy.scale.set(1, 1, 1);
           dummy.updateMatrix();
           swMatrices.push(dummy.matrix.clone());
 
-          // Inner grass block
           dummy.position.set(cx, 0.13, cz);
           dummy.updateMatrix();
           grassMatrices.push(dummy.matrix.clone());
 
-          // Distance from city center determines zoning probability
           const distFromCenter = Math.hypot(gx - (CONFIG.gridCount - 1) / 2, gz - (CONFIG.gridCount - 1) / 2);
 
-          // Decide block layout: 1 large plot or 4 quadrant plots
           const isSinglePlot = (distFromCenter < 1.6 && rng.next() < 0.65) || rng.next() < 0.2;
           const plots = [];
 
@@ -682,7 +992,6 @@
           }
 
           plots.forEach(plot => {
-            // Small chance of a mini park / tree plaza on a sub-plot
             if (!isSinglePlot && rng.next() < 0.14) {
               for (let t = 0; t < 3; t++) {
                 const tx = plot.x + rng.range(-1.8, 1.8);
@@ -692,7 +1001,6 @@
               return;
             }
 
-            // Pick Building Type based on distance to downtown core
             let bType = 'Residential';
             const rVal = rng.next();
             if (distFromCenter < 1.5) {
@@ -710,7 +1018,6 @@
               else bType = 'Office';
             }
 
-            // Determine floors and dimensions
             let floors = 4;
             if (bType === 'Shop') floors = rng.int(1, 3);
             else if (bType === 'Residential') floors = rng.int(3, 8);
@@ -729,7 +1036,6 @@
               metalness: bType === 'Tower' ? 0.45 : 0.1
             });
 
-            // Main building body
             const bGeo = new THREE.BoxGeometry(w, h, d);
             const bMesh = new THREE.Mesh(bGeo, bMat);
             const baseY = 0.26;
@@ -738,7 +1044,6 @@
             bMesh.receiveShadow = true;
             cityGroup.add(bMesh);
 
-            // Optional roof tier / crown detail
             if (bType === 'Tower' || (bType === 'Office' && rng.next() < 0.5)) {
               const roofH = rng.range(1.2, 2.8);
               const roofGeo = new THREE.BoxGeometry(w * 0.65, roofH, d * 0.65);
@@ -756,7 +1061,6 @@
               }
             }
 
-            // Store metadata for raycasting inspection
             const bName = `${rng.pick(PREFIXES)} ${rng.pick(SUFFIXES[bType])}`;
             bMesh.userData = {
               isBuilding: true,
@@ -773,6 +1077,14 @@
             };
             buildingHitBoxes.push(bMesh);
 
+            // Register AABB collider for player driving collision
+            buildingColliders.push({
+              minX: plot.x - w / 2,
+              maxX: plot.x + w / 2,
+              minZ: plot.z - d / 2,
+              maxZ: plot.z + d / 2
+            });
+
             // Generate Window Panels around all 4 facades
             const winW = 0.68;
             const winH = 0.62;
@@ -781,11 +1093,9 @@
             const colsZ = Math.max(1, Math.floor((d - 0.8) / colSpacing));
 
             for (let f = 0; f < floors; f++) {
-              // Skip ground floor windows on residential sometimes
               if (f === 0 && bType === 'Residential' && rng.next() < 0.4) continue;
               const wy = baseY + (f + 0.55) * floorHeight;
 
-              // Front (+Z) & Back (-Z) facades
               for (let c = 0; c < colsX; c++) {
                 const wx = plot.x - ((colsX - 1) * colSpacing) / 2 + c * colSpacing;
                 [1, -1].forEach(dir => {
@@ -799,7 +1109,6 @@
                 });
               }
 
-              // Right (+X) & Left (-X) facades
               for (let c = 0; c < colsZ; c++) {
                 const wz = plot.z - ((colsZ - 1) * colSpacing) / 2 + c * colSpacing;
                 [1, -1].forEach(dir => {
@@ -815,7 +1124,6 @@
             }
           });
 
-          // Add corner sidewalk trees on each block
           const treeCornerOff = CONFIG.blockSize / 2 - 1.6;
           [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([dx, dz]) => {
             if (rng.next() < 0.65) {
@@ -831,7 +1139,6 @@
         }
       }
 
-      // Instantiate Sidewalks & Grass
       const swInst = new THREE.InstancedMesh(sidewalkGeo, MATS.sidewalk, swMatrices.length);
       swInst.receiveShadow = true;
       swMatrices.forEach((m, i) => swInst.setMatrixAt(i, m));
@@ -842,7 +1149,6 @@
       grassMatrices.forEach((m, i) => grassInst.setMatrixAt(i, m));
       cityGroup.add(grassInst);
 
-      // Instantiate Windows (1 PlaneGeometry scaled via instance matrix)
       const unitWinGeo = new THREE.PlaneGeometry(1, 1);
       if (litWindowMatrices.length > 0) {
         const litWinInst = new THREE.InstancedMesh(unitWinGeo, MATS.windowLit, litWindowMatrices.length);
@@ -855,7 +1161,6 @@
         cityGroup.add(darkWinInst);
       }
 
-      // Instantiate Trees
       if (treeTrunkMatrices.length > 0) {
         const trunkGeo = new THREE.CylinderGeometry(0.14, 0.2, 1.1, 6);
         const foliageGeo = new THREE.ConeGeometry(0.95, 2.2, 7);
@@ -889,7 +1194,6 @@
       const bulbMatrices = [];
       const dummy = new THREE.Object3D();
 
-      // Place traffic light poles at every intersection (2 diagonal corners per intersection)
       const poleGeo = new THREE.CylinderGeometry(0.1, 0.12, 3.6, 8);
       const boxGeo = new THREE.BoxGeometry(0.38, 1.05, 0.38);
       const lightDotGeo = new THREE.SphereGeometry(0.12, 8, 8);
@@ -899,7 +1203,6 @@
           const rx = ROAD_COORDS[ix];
           const rz = ROAD_COORDS[iz];
 
-          // SE corner (+3.4, +3.4) and NW corner (-3.4, -3.4)
           [[3.4, 3.4], [-3.4, -3.4]].forEach(([ox, oz]) => {
             const px = rx + ox;
             const pz = rz + oz;
@@ -915,7 +1218,6 @@
             housing.position.y = 3.3;
             tlGroup.add(housing);
 
-            // Bulbs on North/South faces (controlled by NS materials)
             const nsR = new THREE.Mesh(lightDotGeo, MATS.nsRed);
             const nsY = new THREE.Mesh(lightDotGeo, MATS.nsYellow);
             const nsG = new THREE.Mesh(lightDotGeo, MATS.nsGreen);
@@ -927,7 +1229,6 @@
             const nsY2 = nsY.clone(); nsY2.position.z = -0.18;
             const nsG2 = nsG.clone(); nsG2.position.z = -0.18;
 
-            // Bulbs on East/West faces (controlled by EW materials)
             const ewR = new THREE.Mesh(lightDotGeo, MATS.ewRed);
             const ewY = new THREE.Mesh(lightDotGeo, MATS.ewYellow);
             const ewG = new THREE.Mesh(lightDotGeo, MATS.ewGreen);
@@ -945,7 +1246,6 @@
         }
       }
 
-      // Streetlights along blocks
       for (let gx = 0; gx < CONFIG.gridCount; gx++) {
         for (let gz = 0; gz < CONFIG.gridCount; gz++) {
           const cx = -HALF_GRID + (gx + 0.5) * CONFIG.pitch;
@@ -982,96 +1282,135 @@
     }
 
     // ==========================================
-    // 9. CARS & TRAFFIC SYSTEM
+    // 9. CARS, TRAFFIC AI & DRIVING PHYSICS
     // ==========================================
-    const CAR_COLORS = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xec4899, 0xe2e8f0, 0x14b8a6];
+    const CAR_COLORS = [
+      { hex: 0xef4444, css: '#ef4444' },
+      { hex: 0x3b82f6, css: '#3b82f6' },
+      { hex: 0x10b981, css: '#10b981' },
+      { hex: 0xf59e0b, css: '#f59e0b' },
+      { hex: 0x8b5cf6, css: '#8b5cf6' },
+      { hex: 0xec4899, css: '#ec4899' },
+      { hex: 0xe2e8f0, css: '#e2e8f0' },
+      { hex: 0x14b8a6, css: '#14b8a6' }
+    ];
+
+    const hitBoxMat = new THREE.MeshBasicMaterial({ visible: false });
 
     function createCarMesh(colorHex) {
       const carGroup = new THREE.Group();
 
-      const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.3, metalness: 0.4 });
-      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.48, 2.5), bodyMat);
-      chassis.position.y = 0.36;
+      const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.28, metalness: 0.45 });
+      const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.32, 0.46, 2.55), bodyMat);
+      chassis.position.y = 0.38;
       chassis.castShadow = true;
+      chassis.receiveShadow = true;
       carGroup.add(chassis);
 
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.42, 1.35), MATS.carCabin);
-      cabin.position.set(0, 0.78, -0.1);
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.40, 1.35), MATS.carCabin);
+      cabin.position.set(0, 0.78, -0.08);
+      cabin.castShadow = true;
       carGroup.add(cabin);
+
+      // 4 Wheels
+      const wheelGeo = new THREE.CylinderGeometry(0.24, 0.24, 0.18, 12);
+      wheelGeo.rotateZ(Math.PI / 2);
+      [
+        [-0.64, 0.24, 0.78],
+        [0.64, 0.24, 0.78],
+        [-0.64, 0.24, -0.78],
+        [0.64, 0.24, -0.78]
+      ].forEach(([wx, wy, wz]) => {
+        const wMesh = new THREE.Mesh(wheelGeo, MATS.carWheel);
+        wMesh.position.set(wx, wy, wz);
+        carGroup.add(wMesh);
+      });
 
       // Headlights (+Z front)
       const hlGeo = new THREE.BoxGeometry(0.26, 0.16, 0.08);
       const hlLeft = new THREE.Mesh(hlGeo, MATS.carHeadlight);
-      hlLeft.position.set(0.42, 0.38, 1.26);
+      hlLeft.position.set(0.42, 0.40, 1.28);
       const hlRight = hlLeft.clone();
       hlRight.position.x = -0.42;
       carGroup.add(hlLeft, hlRight);
 
       // Taillights (-Z back)
       const tlLeft = new THREE.Mesh(hlGeo, MATS.carTaillight);
-      tlLeft.position.set(0.42, 0.38, -1.26);
+      tlLeft.position.set(0.42, 0.40, -1.28);
       const tlRight = tlLeft.clone();
       tlRight.position.x = -0.42;
       carGroup.add(tlLeft, tlRight);
 
-      return carGroup;
+      // Invisible generous click collider so clicking moving cars is effortless
+      const clickBox = new THREE.Mesh(new THREE.BoxGeometry(1.85, 1.35, 3.0), hitBoxMat);
+      clickBox.position.y = 0.65;
+      carGroup.add(clickBox);
+
+      return { carGroup, clickBox, tlLeft, tlRight };
     }
 
     function spawnCars() {
       cars = [];
-      const laneOffset = 1.45; // Right-hand traffic lane offset from road center
+      carHitBoxes = [];
+      const laneOffset = 1.45;
 
       for (let i = 0; i < CONFIG.carCount; i++) {
-        const color = rng.pick(CAR_COLORS);
-        const mesh = createCarMesh(color);
+        const colorObj = rng.pick(CAR_COLORS);
+        const { carGroup, clickBox, tlLeft, tlRight } = createCarMesh(colorObj.hex);
 
-        const axis = rng.next() < 0.5 ? 'z' : 'x'; // 'z' = North-South road, 'x' = East-West road
+        const axis = rng.next() < 0.5 ? 'z' : 'x';
         const dir = rng.next() < 0.5 ? 1 : -1;
         const roadIdx = rng.int(0, CONFIG.gridCount);
         const roadCoord = ROAD_COORDS[roadIdx];
         const posAlong = rng.range(-HALF_GRID + 4, HALF_GRID - 4);
+        const maxAiSpeed = rng.range(11.5, 16.0);
 
         const car = {
-          mesh,
+          id: `EV-${100 + i}`,
+          name: rng.pick(CAR_MODELS),
+          colorCss: colorObj.css,
+          mesh: carGroup,
+          tlLeft,
+          tlRight,
           axis,
           dir,
           roadCoord,
           posAlong,
-          speed: 0,
-          maxSpeed: rng.range(11, 15.5),
+          speed: rng.range(4, maxAiSpeed),
+          maxSpeed: maxAiSpeed,
+          driveMaxSpeed: 28.0, // ~100 km/h when player-driven
           laneOffset,
-          lastTurnIntersection: -999
+          lastTurnIntersection: -999,
+          isPlayerControlled: false,
+          heading: 0,
+          steerAngle: 0
         };
 
+        clickBox.userData = { isCar: true, carRef: car };
+        carHitBoxes.push(clickBox);
+
         syncCarTransform(car);
-        cityGroup.add(mesh);
+        cityGroup.add(carGroup);
         cars.push(car);
       }
     }
 
     function syncCarTransform(car) {
       if (car.axis === 'z') {
-        // Travelling along Z: right-hand side is +X when dir=+1, -X when dir=-1 -> wait:
-        // Facing +Z: right hand is -X. Facing -Z: right hand is +X.
         const lx = car.roadCoord - car.dir * car.laneOffset;
         car.mesh.position.set(lx, 0, car.posAlong);
-        car.mesh.rotation.y = car.dir === 1 ? 0 : Math.PI;
+        car.heading = car.dir === 1 ? 0 : Math.PI;
+        car.mesh.rotation.y = car.heading;
       } else {
-        // Facing +X: right hand is +Z. Facing -X: right hand is -Z.
         const lz = car.roadCoord + car.dir * car.laneOffset;
         car.mesh.position.set(car.posAlong, 0, lz);
-        car.mesh.rotation.y = car.dir === 1 ? Math.PI / 2 : -Math.PI / 2;
+        car.heading = car.dir === 1 ? Math.PI / 2 : -Math.PI / 2;
+        car.mesh.rotation.y = car.heading;
       }
     }
 
-    // Traffic light state helper
     let trafficClock = 0;
     function getTrafficStates(t) {
-      // 16s full cycle:
-      // 0..6.5: NS Green, EW Red
-      // 6.5..8.0: NS Yellow, EW Red
-      // 8.0..14.5: NS Red, EW Green
-      // 14.5..16.0: NS Red, EW Yellow
       const c = t % 16;
       let ns = 'red', ew = 'red';
       if (c < 6.5) { ns = 'green'; ew = 'red'; }
@@ -1091,11 +1430,12 @@
       MATS.ewGreen.emissiveIntensity  = states.ew === 'green' ? 2.2 : 0.05;
     }
 
-    function updateCars(dt, states) {
+    function updateAICars(dt, states) {
       for (let i = 0; i < cars.length; i++) {
         const car = cars[i];
-        const lightState = car.axis === 'z' ? states.ns : states.ew;
+        if (car.isPlayerControlled) continue;
 
+        const lightState = car.axis === 'z' ? states.ns : states.ew;
         let shouldStop = false;
 
         // 1. Check upcoming intersection stop line
@@ -1126,20 +1466,36 @@
           }
         }
 
-        // 3. Check car ahead in the same lane to prevent collisions
+        // 3. Check all other cars (including the player-driven car) in front in a forward cone
+        const cx = car.mesh.position.x;
+        const cz = car.mesh.position.z;
+        const fwdX = car.axis === 'x' ? car.dir : 0;
+        const fwdZ = car.axis === 'z' ? car.dir : 0;
+
         for (let j = 0; j < cars.length; j++) {
           if (i === j) continue;
           const other = cars[j];
-          if (other.axis === car.axis && other.dir === car.dir && Math.abs(other.roadCoord - car.roadCoord) < 0.1) {
-            const gap = (other.posAlong - car.posAlong) * car.dir;
-            if (gap > 0 && gap < 5.2) {
-              shouldStop = true;
-              break;
-            }
+          const dx = other.mesh.position.x - cx;
+          const dz = other.mesh.position.z - cz;
+
+          const forwardDist = dx * fwdX + dz * fwdZ;
+          const lateralDist = Math.abs(dx * fwdZ - dz * fwdX);
+
+          // Brake if another vehicle (AI or player) is within 5.5m ahead in our path
+          const lateralThreshold = other.isPlayerControlled ? 1.85 : 1.15;
+          if (forwardDist > 0.5 && forwardDist < 5.6 && lateralDist < lateralThreshold) {
+            shouldStop = true;
+            break;
           }
         }
 
-        // Smooth acceleration / braking
+        // Set brake taillight glow
+        const brakingMat = shouldStop ? MATS.carTaillightBrake : MATS.carTaillight;
+        if (car.tlLeft.material !== brakingMat) {
+          car.tlLeft.material = brakingMat;
+          car.tlRight.material = brakingMat;
+        }
+
         if (shouldStop) {
           car.speed = Math.max(0, car.speed - 28 * dt);
         } else {
@@ -1148,7 +1504,6 @@
 
         car.posAlong += car.dir * car.speed * dt;
 
-        // Wrap around at city edges or U-turn
         const bound = HALF_GRID + 2.5;
         if (car.posAlong > bound) {
           car.posAlong = -bound;
@@ -1163,7 +1518,317 @@
     }
 
     // ==========================================
-    // 10. PEDESTRIANS ON SIDEWALKS
+    // 10. PLAYER DRIVING PHYSICS & COLLISIONS
+    // ==========================================
+    function updateDrivenCar(dt) {
+      if (!drivenCar) return;
+
+      const accelRate = 24.0;
+      const reverseAccel = 15.0;
+      const brakeDecel = 38.0;
+      const handbrakeDecel = 52.0;
+      const rollingFriction = 7.5;
+      const maxForward = drivenCar.driveMaxSpeed;
+      const maxReverse = -10.5;
+
+      let isBraking = false;
+
+      if (keys.space) {
+        // Handbrake
+        isBraking = true;
+        if (Math.abs(drivenCar.speed) < 0.4) {
+          drivenCar.speed = 0;
+        } else {
+          drivenCar.speed -= Math.sign(drivenCar.speed) * handbrakeDecel * dt;
+        }
+      } else if (keys.up) {
+        if (drivenCar.speed < 0) {
+          drivenCar.speed += brakeDecel * dt;
+          isBraking = true;
+        } else {
+          drivenCar.speed = Math.min(maxForward, drivenCar.speed + accelRate * dt);
+        }
+      } else if (keys.down) {
+        if (drivenCar.speed > 0.2) {
+          drivenCar.speed -= brakeDecel * dt;
+          isBraking = true;
+        } else {
+          drivenCar.speed = Math.max(maxReverse, drivenCar.speed - reverseAccel * dt);
+        }
+      } else {
+        // Natural rolling resistance
+        if (Math.abs(drivenCar.speed) < 0.25) {
+          drivenCar.speed = 0;
+        } else {
+          drivenCar.speed -= Math.sign(drivenCar.speed) * rollingFriction * dt;
+        }
+      }
+
+      // Brake light feedback
+      const tailMat = isBraking ? MATS.carTaillightBrake : MATS.carTaillight;
+      if (drivenCar.tlLeft.material !== tailMat) {
+        drivenCar.tlLeft.material = tailMat;
+        drivenCar.tlRight.material = tailMat;
+      }
+
+      // Speed-dependent arcade steering
+      const speedAbs = Math.abs(drivenCar.speed);
+      if (speedAbs > 0.15) {
+        const steerInput = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+        // Ramps up from standstill, slightly tighter at medium speed, stable at high speed
+        const lowSpeedFactor = Math.min(1.0, speedAbs / 3.5);
+        const highSpeedDamp = 1.0 - Math.min(0.38, (speedAbs / maxForward) * 0.38);
+        const turnRate = 2.45 * lowSpeedFactor * highSpeedDamp;
+        const reverseFlip = drivenCar.speed >= 0 ? 1 : -1;
+
+        drivenCar.heading += steerInput * turnRate * reverseFlip * dt;
+      }
+
+      // Proposed new position
+      const vx = Math.sin(drivenCar.heading) * drivenCar.speed * dt;
+      const vz = Math.cos(drivenCar.heading) * drivenCar.speed * dt;
+
+      let nx = drivenCar.mesh.position.x + vx;
+      let nz = drivenCar.mesh.position.z + vz;
+
+      const carRadius = 1.08;
+
+      // 1. City perimeter boundary clamp
+      if (nx > CITY_BOUND) { nx = CITY_BOUND; drivenCar.speed *= 0.4; }
+      if (nx < -CITY_BOUND) { nx = -CITY_BOUND; drivenCar.speed *= 0.4; }
+      if (nz > CITY_BOUND) { nz = CITY_BOUND; drivenCar.speed *= 0.4; }
+      if (nz < -CITY_BOUND) { nz = -CITY_BOUND; drivenCar.speed *= 0.4; }
+
+      // 2. Building footprint AABB collision resolution (circle vs AABB)
+      for (let i = 0; i < buildingColliders.length; i++) {
+        const b = buildingColliders[i];
+        const closestX = Math.max(b.minX, Math.min(nx, b.maxX));
+        const closestZ = Math.max(b.minZ, Math.min(nz, b.maxZ));
+        const dx = nx - closestX;
+        const dz = nz - closestZ;
+        const distSq = dx * dx + dz * dz;
+
+        if (distSq < carRadius * carRadius) {
+          const dist = Math.sqrt(distSq);
+          if (dist > 0.0001) {
+            const overlap = carRadius - dist;
+            nx += (dx / dist) * overlap;
+            nz += (dz / dist) * overlap;
+          } else {
+            // Center inside AABB fallback: push out along nearest edge
+            const penLeft = Math.abs(nx - b.minX);
+            const penRight = Math.abs(b.maxX - nx);
+            const penTop = Math.abs(nz - b.minZ);
+            const penBottom = Math.abs(b.maxZ - nz);
+            const minPen = Math.min(penLeft, penRight, penTop, penBottom);
+            if (minPen === penLeft) nx = b.minX - carRadius;
+            else if (minPen === penRight) nx = b.maxX + carRadius;
+            else if (minPen === penTop) nz = b.minZ - carRadius;
+            else nz = b.maxZ + carRadius;
+          }
+          // Damp speed on building scrape/impact
+          drivenCar.speed *= 0.55;
+        }
+      }
+
+      // 3. Soft collision against AI cars so neither drives through the other
+      const minCarSeparation = 2.15;
+      for (let i = 0; i < cars.length; i++) {
+        const other = cars[i];
+        if (other === drivenCar) continue;
+        const dx = nx - other.mesh.position.x;
+        const dz = nz - other.mesh.position.z;
+        const dSq = dx * dx + dz * dz;
+        if (dSq < minCarSeparation * minCarSeparation && dSq > 0.0001) {
+          const d = Math.sqrt(dSq);
+          const push = (minCarSeparation - d);
+          nx += (dx / d) * push * 0.8;
+          nz += (dz / d) * push * 0.8;
+          drivenCar.speed *= 0.7;
+          other.speed = 0;
+        }
+      }
+
+      drivenCar.mesh.position.set(nx, 0, nz);
+      drivenCar.mesh.rotation.y = drivenCar.heading;
+
+      // Update Speedometer HUD (1 unit/s ≈ 3.8 km/h for realistic scale feel)
+      const kmh = Math.round(Math.abs(drivenCar.speed) * 3.8);
+      document.getElementById('speedo-val').textContent = kmh;
+      const gearEl = document.getElementById('gear-indicator');
+      if (drivenCar.speed < -0.2) {
+        gearEl.textContent = 'R';
+        gearEl.style.color = '#f87171';
+      } else if (Math.abs(drivenCar.speed) < 0.2) {
+        gearEl.textContent = 'N';
+        gearEl.style.color = '#94a3b8';
+      } else {
+        gearEl.textContent = 'D';
+        gearEl.style.color = '#38bdf8';
+      }
+    }
+
+    function updateDriveCamera(dt) {
+      if (!drivenCar) {
+        // Smooth transition back to OrbitControls after exiting car
+        if (camReturnLerp > 0) {
+          camReturnLerp = Math.max(0, camReturnLerp - dt * 2.5);
+          const alpha = 1 - Math.pow(camReturnLerp, 2);
+          camera.position.lerp(savedOrbitPos, alpha * 0.22);
+          controls.target.lerp(savedOrbitTarget, alpha * 0.22);
+          if (camReturnLerp === 0) {
+            controls.enabled = true;
+          }
+        }
+        return;
+      }
+
+      const carPos = drivenCar.mesh.position;
+      const fwdX = Math.sin(drivenCar.heading);
+      const fwdZ = Math.cos(drivenCar.heading);
+
+      let desiredCamPos, desiredTarget;
+
+      if (driveCamMode === 'chase') {
+        desiredCamPos = new THREE.Vector3(
+          carPos.x - fwdX * 10.5,
+          carPos.y + 4.6,
+          carPos.z - fwdZ * 10.5
+        );
+        desiredTarget = new THREE.Vector3(
+          carPos.x + fwdX * 6.5,
+          carPos.y + 1.2,
+          carPos.z + fwdZ * 6.5
+        );
+      } else {
+        // Top-Down / Helicopter follow view
+        desiredCamPos = new THREE.Vector3(
+          carPos.x - fwdX * 5.0,
+          carPos.y + 30.0,
+          carPos.z - fwdZ * 5.0
+        );
+        desiredTarget = new THREE.Vector3(
+          carPos.x + fwdX * 3.5,
+          carPos.y + 0.5,
+          carPos.z + fwdZ * 3.5
+        );
+      }
+
+      const smoothFactor = 1 - Math.exp(-8.5 * dt);
+      camera.position.lerp(desiredCamPos, smoothFactor);
+      controls.target.lerp(desiredTarget, smoothFactor);
+      camera.lookAt(controls.target);
+    }
+
+    // Snap a car smoothly back to the nearest valid road lane when exiting Drive Mode
+    function returnCarToNearestLane(car) {
+      const px = car.mesh.position.x;
+      const pz = car.mesh.position.z;
+
+      let bestRoadX = ROAD_COORDS[0];
+      let minDistX = Math.abs(px - bestRoadX);
+      for (let i = 1; i < ROAD_COORDS.length; i++) {
+        const d = Math.abs(px - ROAD_COORDS[i]);
+        if (d < minDistX) { minDistX = d; bestRoadX = ROAD_COORDS[i]; }
+      }
+
+      let bestRoadZ = ROAD_COORDS[0];
+      let minDistZ = Math.abs(pz - bestRoadZ);
+      for (let i = 1; i < ROAD_COORDS.length; i++) {
+        const d = Math.abs(pz - ROAD_COORDS[i]);
+        if (d < minDistZ) { minDistZ = d; bestRoadZ = ROAD_COORDS[i]; }
+      }
+
+      const fwdX = Math.sin(car.heading);
+      const fwdZ = Math.cos(car.heading);
+
+      if (minDistX < minDistZ) {
+        // Snap to North-South road ('z' axis)
+        car.axis = 'z';
+        car.dir = fwdZ >= 0 ? 1 : -1;
+        car.roadCoord = bestRoadX;
+        car.posAlong = THREE.MathUtils.clamp(pz, -HALF_GRID + 2, HALF_GRID - 2);
+      } else {
+        // Snap to East-West road ('x' axis)
+        car.axis = 'x';
+        car.dir = fwdX >= 0 ? 1 : -1;
+        car.roadCoord = bestRoadZ;
+        car.posAlong = THREE.MathUtils.clamp(px, -HALF_GRID + 2, HALF_GRID - 2);
+      }
+
+      car.speed = Math.min(Math.abs(car.speed), car.maxSpeed);
+      car.lastTurnIntersection = -999;
+      car.tlLeft.material = MATS.carTaillight;
+      car.tlRight.material = MATS.carTaillight;
+      syncCarTransform(car);
+    }
+
+    function enterDriveMode(car) {
+      if (!car) return;
+      if (drivenCar && drivenCar !== car) {
+        drivenCar.isPlayerControlled = false;
+        returnCarToNearestLane(drivenCar);
+      }
+
+      // Save current orbit camera state if we aren't already driving
+      if (!drivenCar) {
+        savedOrbitPos.copy(camera.position);
+        savedOrbitTarget.copy(controls.target);
+        hasSavedOrbit = true;
+      }
+
+      selectedCar = car;
+      drivenCar = car;
+      drivenCar.isPlayerControlled = true;
+      camReturnLerp = 0;
+
+      // Attach real dynamic headlight beam to the player's car
+      if (drivenCarHeadlightSpot) {
+        drivenCar.mesh.add(drivenCarHeadlightSpot);
+        drivenCar.mesh.add(drivenCarHeadlightSpot.target);
+      }
+
+      controls.enabled = false;
+      hideBuildingInfo();
+      document.getElementById('car-panel').classList.remove('visible');
+      document.getElementById('drive-car-title').textContent = `Driving: ${car.name} (${car.id})`;
+      document.getElementById('drive-hud').classList.add('visible');
+      document.getElementById('controls-hint').classList.add('hidden');
+
+      if (isTouchDevice()) {
+        document.getElementById('touch-controls').classList.add('active');
+      }
+    }
+
+    function exitDriveMode() {
+      if (!drivenCar) return;
+      const prevCar = drivenCar;
+      prevCar.isPlayerControlled = false;
+      if (drivenCarHeadlightSpot && drivenCarHeadlightSpot.parent) {
+        drivenCarHeadlightSpot.parent.remove(drivenCarHeadlightSpot);
+        if (drivenCarHeadlightSpot.target.parent) {
+          drivenCarHeadlightSpot.target.parent.remove(drivenCarHeadlightSpot.target);
+        }
+      }
+      returnCarToNearestLane(prevCar);
+      drivenCar = null;
+
+      // Clear active key states
+      keys.up = keys.down = keys.left = keys.right = keys.space = false;
+
+      document.getElementById('drive-hud').classList.remove('visible');
+      document.getElementById('touch-controls').classList.remove('active');
+      document.getElementById('controls-hint').classList.remove('hidden');
+
+      if (hasSavedOrbit) {
+        camReturnLerp = 1.0;
+      } else {
+        controls.enabled = true;
+      }
+    }
+
+    // ==========================================
+    // 11. PEDESTRIANS ON SIDEWALKS
     // ==========================================
     function spawnPedestrians() {
       pedestrians = [];
@@ -1180,7 +1845,7 @@
         const mesh = new THREE.Mesh(pedGeo, mat);
         mesh.castShadow = true;
 
-        const pathHalf = CONFIG.blockSize / 2 - 0.85; // 8.15m square loop on sidewalk
+        const pathHalf = CONFIG.blockSize / 2 - 0.85;
         const ped = {
           mesh,
           cx,
@@ -1226,21 +1891,26 @@
     }
 
     // ==========================================
-    // 11. DAY–NIGHT CYCLE & ATMOSPHERE
+    // 12. DAY–NIGHT CYCLE & ATMOSPHERE
     // ==========================================
-    let timeOfDay = 10.5; // Starts at 10:30 AM (0..24)
+    let timeOfDay = 10.5;
     let simSpeed = 1.0;
 
+    // Spotlight used for the driven car's headlights at night
+    drivenCarHeadlightSpot = new THREE.SpotLight(0xfef08a, 0, 32, Math.PI / 4.2, 0.5, 1.2);
+    drivenCarHeadlightSpot.position.set(0, 0.65, 1.2);
+    drivenCarHeadlightSpot.target.position.set(0, 0.1, 14);
+
     const SKY_KEYFRAMES = [
-      { hour: 0,  sky: new THREE.Color(0x070b19), amb: 0.16, sun: 0.0,  phase: 'Midnight', icon: '🌙' },
-      { hour: 5,  sky: new THREE.Color(0x0f172a), amb: 0.20, sun: 0.0,  phase: 'Dawn',     icon: '🌅' },
-      { hour: 6.5,sky: new THREE.Color(0xfd8b5b), amb: 0.45, sun: 0.75, phase: 'Sunrise',  icon: '🌅' },
-      { hour: 9,  sky: new THREE.Color(0x60a5fa), amb: 0.60, sun: 1.25, phase: 'Morning',  icon: '☀️' },
-      { hour: 12, sky: new THREE.Color(0x87ceeb), amb: 0.70, sun: 1.45, phase: 'Midday',   icon: '☀️' },
-      { hour: 16, sky: new THREE.Color(0x60a5fa), amb: 0.60, sun: 1.20, phase: 'Afternoon',icon: '☀️' },
-      { hour: 18, sky: new THREE.Color(0xf97316), amb: 0.45, sun: 0.70, phase: 'Sunset',   icon: '🌇' },
-      { hour: 19.5,sky:new THREE.Color(0x1e1b4b), amb: 0.22, sun: 0.05, phase: 'Dusk',     icon: '🌆' },
-      { hour: 24, sky: new THREE.Color(0x070b19), amb: 0.16, sun: 0.0,  phase: 'Midnight', icon: '🌙' }
+      { hour: 0,   sky: new THREE.Color(0x070b19), amb: 0.16, sun: 0.0,  phase: 'Midnight',  icon: '🌙' },
+      { hour: 5,   sky: new THREE.Color(0x0f172a), amb: 0.20, sun: 0.0,  phase: 'Dawn',      icon: '🌅' },
+      { hour: 6.5, sky: new THREE.Color(0xfd8b5b), amb: 0.45, sun: 0.75, phase: 'Sunrise',   icon: '🌅' },
+      { hour: 9,   sky: new THREE.Color(0x60a5fa), amb: 0.60, sun: 1.25, phase: 'Morning',   icon: '☀️' },
+      { hour: 12,  sky: new THREE.Color(0x87ceeb), amb: 0.70, sun: 1.45, phase: 'Midday',    icon: '☀️' },
+      { hour: 16,  sky: new THREE.Color(0x60a5fa), amb: 0.60, sun: 1.20, phase: 'Afternoon', icon: '☀️' },
+      { hour: 18,  sky: new THREE.Color(0xf97316), amb: 0.45, sun: 0.70, phase: 'Sunset',    icon: '🌇' },
+      { hour: 19.5,sky: new THREE.Color(0x1e1b4b), amb: 0.22, sun: 0.05, phase: 'Dusk',      icon: '🌆' },
+      { hour: 24,  sky: new THREE.Color(0x070b19), amb: 0.16, sun: 0.0,  phase: 'Midnight',  icon: '🌙' }
     ];
 
     const clockTextEl = document.getElementById('clock-text');
@@ -1248,10 +1918,8 @@
     const phaseTextEl = document.getElementById('phase-text');
 
     function updateDayNightCycle(dt) {
-      // Advance clock
       timeOfDay = (timeOfDay + (dt * 24 / CONFIG.dayDuration) * simSpeed) % 24;
 
-      // Find surrounding keyframes
       let k0 = SKY_KEYFRAMES[0], k1 = SKY_KEYFRAMES[1];
       for (let i = 0; i < SKY_KEYFRAMES.length - 1; i++) {
         if (timeOfDay >= SKY_KEYFRAMES[i].hour && timeOfDay <= SKY_KEYFRAMES[i + 1].hour) {
@@ -1264,11 +1932,9 @@
       const span = k1.hour - k0.hour || 1;
       const alpha = (timeOfDay - k0.hour) / span;
 
-      // Interpolate sky and fog color
       scene.background.lerpColors(k0.sky, k1.sky, alpha);
       scene.fog.color.copy(scene.background);
 
-      // Sun & Moon orbital angle (6:00 = sunrise at 0 rad, 12:00 = zenith at PI/2, 18:00 = sunset at PI)
       const sunAngle = ((timeOfDay - 6) / 24) * Math.PI * 2;
       const orbitRadius = 190;
       const sx = Math.cos(sunAngle) * orbitRadius;
@@ -1278,7 +1944,6 @@
       sunMesh.position.set(sx, sy, sz);
       moonMesh.position.set(-sx, -sy, -sz);
 
-      // Position directional light from either sun (day) or moon (night)
       if (sy > 0) {
         sunLight.position.set(sx, Math.max(sy, 18), sz);
         sunLight.color.setHex(sy < 65 ? 0xfdba74 : 0xfffbeb);
@@ -1289,17 +1954,19 @@
 
       const sunInt = THREE.MathUtils.lerp(k0.sun, k1.sun, alpha);
       const ambInt = THREE.MathUtils.lerp(k0.amb, k1.amb, alpha);
-      sunLight.intensity = sy > 0 ? sunInt : 0.22; // Soft moonlight at night
+      sunLight.intensity = sy > 0 ? sunInt : 0.22;
       ambientLight.intensity = ambInt;
       hemiLight.intensity = ambInt * 0.85;
 
-      // Nighttime emissive intensity for windows, streetlights, and headlights
       const isNightFactor = THREE.MathUtils.clamp(1 - (sy + 20) / 55, 0, 1);
       MATS.windowLit.emissiveIntensity = isNightFactor * 1.45;
       MATS.streetLampBulb.emissiveIntensity = isNightFactor * 2.5;
-      MATS.carHeadlight.emissiveIntensity = isNightFactor * 3.0;
+      MATS.carHeadlight.emissiveIntensity = isNightFactor * 3.2;
 
-      // Update HUD Clock
+      if (drivenCarHeadlightSpot) {
+        drivenCarHeadlightSpot.intensity = isNightFactor * 18.0;
+      }
+
       const hours = Math.floor(timeOfDay);
       const mins = Math.floor((timeOfDay - hours) * 60);
       clockTextEl.textContent = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
@@ -1308,15 +1975,17 @@
     }
 
     // ==========================================
-    // 12. CITY GENERATION ORCHESTRATOR
+    // 13. CITY GENERATION ORCHESTRATOR
     // ==========================================
     function generateCity(seed) {
+      if (drivenCar) exitDriveMode();
+      selectedCar = null;
       currentSeed = seed;
       rng = new PRNG(seed);
       document.getElementById('seed-display').textContent = `Seed: #${seed}`;
       hideBuildingInfo();
+      hideCarInfo();
 
-      // Dispose previous geometries/materials inside cityGroup
       while (cityGroup.children.length > 0) {
         const child = cityGroup.children[0];
         cityGroup.remove(child);
@@ -1329,35 +1998,37 @@
       spawnCars();
       spawnPedestrians();
 
-      // Re-create selection wireframe mesh
+      // Building selection wireframe box
       const selGeo = new THREE.BoxGeometry(1, 1, 1);
       selectionBoxMesh = new THREE.Mesh(selGeo, MATS.highlight);
       selectionBoxMesh.visible = false;
       cityGroup.add(selectionBoxMesh);
+
+      // Car selection wireframe box
+      const carRingGeo = new THREE.BoxGeometry(1.75, 1.15, 2.95);
+      carSelectionRing = new THREE.Mesh(carRingGeo, MATS.carHighlight);
+      carSelectionRing.visible = false;
+      cityGroup.add(carSelectionRing);
     }
 
     // ==========================================
-    // 13. INTERACTION & RAYCASTING
+    // 14. INTERACTION, INSPECTORS & INPUTS
     // ==========================================
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     let pointerDownPos = { x: 0, y: 0 };
 
     const infoPanel = document.getElementById('info-panel');
-    const bNameEl = document.getElementById('b-name');
-    const bTypeEl = document.getElementById('b-type');
-    const bFloorsEl = document.getElementById('b-floors');
-    const bHeightEl = document.getElementById('b-height');
-    const bFootprintEl = document.getElementById('b-footprint');
-    const bOccupancyEl = document.getElementById('b-occupancy');
+    const carPanel = document.getElementById('car-panel');
 
     function showBuildingInfo(data) {
-      bNameEl.textContent = data.name;
-      bTypeEl.textContent = data.type;
-      bFloorsEl.textContent = data.floors;
-      bHeightEl.textContent = `${data.heightMeters} m`;
-      bFootprintEl.textContent = data.footprintText;
-      bOccupancyEl.textContent = data.occupancy;
+      hideCarInfo();
+      document.getElementById('b-name').textContent = data.name;
+      document.getElementById('b-type').textContent = data.type;
+      document.getElementById('b-floors').textContent = data.floors;
+      document.getElementById('b-height').textContent = `${data.heightMeters} m`;
+      document.getElementById('b-footprint').textContent = data.footprintText;
+      document.getElementById('b-occupancy').textContent = data.occupancy;
       infoPanel.classList.add('visible');
 
       if (selectionBoxMesh) {
@@ -1372,6 +2043,49 @@
       if (selectionBoxMesh) selectionBoxMesh.visible = false;
     }
 
+    function showCarInfo(car) {
+      hideBuildingInfo();
+      selectedCar = car;
+      document.getElementById('c-swatch').style.background = car.colorCss;
+      document.getElementById('c-name').textContent = car.name;
+      document.getElementById('c-id').textContent = car.id;
+      document.getElementById('c-topspeed').textContent = `${Math.round(car.driveMaxSpeed * 3.8)} km/h`;
+      updateCarInspectorLiveStats();
+      carPanel.classList.add('visible');
+
+      if (carSelectionRing) {
+        carSelectionRing.visible = true;
+      }
+    }
+
+    function updateCarInspectorLiveStats() {
+      if (!selectedCar) return;
+      if (carSelectionRing && carSelectionRing.visible) {
+        carSelectionRing.position.copy(selectedCar.mesh.position);
+        carSelectionRing.position.y = 0.58;
+        carSelectionRing.rotation.y = selectedCar.mesh.rotation.y;
+      }
+      if (!carPanel.classList.contains('visible')) return;
+
+      const kmh = Math.round(Math.abs(selectedCar.speed) * 3.8);
+      document.getElementById('c-speed').textContent = `${kmh} km/h`;
+
+      const deg = ((selectedCar.heading * 180 / Math.PI) % 360 + 360) % 360;
+      let dirLabel = 'Northbound';
+      if (deg >= 45 && deg < 135) dirLabel = 'Eastbound';
+      else if (deg >= 135 && deg < 225) dirLabel = 'Southbound';
+      else if (deg >= 225 && deg < 315) dirLabel = 'Westbound';
+      document.getElementById('c-heading').textContent = dirLabel;
+    }
+
+    function hideCarInfo() {
+      carPanel.classList.remove('visible');
+      if (!drivenCar) {
+        selectedCar = null;
+        if (carSelectionRing) carSelectionRing.visible = false;
+      }
+    }
+
     renderer.domElement.addEventListener('pointerdown', (e) => {
       pointerDownPos.x = e.clientX;
       pointerDownPos.y = e.clientY;
@@ -1379,25 +2093,115 @@
 
     renderer.domElement.addEventListener('pointerup', (e) => {
       const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
-      if (moveDist > 6) return; // Ignore camera drags
+      if (moveDist > 6) return;
 
       pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
       pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
       raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(buildingHitBoxes, false);
 
-      if (hits.length > 0 && hits[0].object.userData.isBuilding) {
-        showBuildingInfo(hits[0].object.userData);
-      } else {
-        hideBuildingInfo();
+      // 1. Check car hits first so cars in front of or near buildings are easy to select
+      const carHits = raycaster.intersectObjects(carHitBoxes, false);
+      if (carHits.length > 0 && carHits[0].object.userData.isCar) {
+        const clickedCar = carHits[0].object.userData.carRef;
+        if (drivenCar) {
+          // If already in drive mode and user clicks another car, switch directly to it
+          enterDriveMode(clickedCar);
+        } else {
+          showCarInfo(clickedCar);
+        }
+        return;
       }
+
+      // 2. Check building hits
+      const buildingHits = raycaster.intersectObjects(buildingHitBoxes, false);
+      if (buildingHits.length > 0 && buildingHits[0].object.userData.isBuilding) {
+        showBuildingInfo(buildingHits[0].object.userData);
+        return;
+      }
+
+      // 3. Empty space click
+      hideBuildingInfo();
+      hideCarInfo();
     });
 
     document.getElementById('close-info').addEventListener('click', hideBuildingInfo);
+    document.getElementById('close-car-info').addEventListener('click', hideCarInfo);
+
+    document.getElementById('drive-car-btn').addEventListener('click', () => {
+      if (selectedCar) enterDriveMode(selectedCar);
+    });
+
+    document.getElementById('exit-drive-btn').addEventListener('click', exitDriveMode);
+
+    document.getElementById('cam-toggle-btn').addEventListener('click', () => {
+      driveCamMode = driveCamMode === 'chase' ? 'top' : 'chase';
+      document.getElementById('cam-mode-label').textContent = driveCamMode === 'chase' ? 'Chase' : 'Top-Down';
+    });
+
+    // Keyboard Controls for Driving
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'Space') {
+        keys.space = true;
+        if (drivenCar) e.preventDefault();
+      }
+      if (e.code === 'KeyC' && drivenCar) {
+        driveCamMode = driveCamMode === 'chase' ? 'top' : 'chase';
+        document.getElementById('cam-mode-label').textContent = driveCamMode === 'chase' ? 'Chase' : 'Top-Down';
+      }
+      if (e.code === 'Escape') {
+        if (drivenCar) exitDriveMode();
+        else {
+          hideBuildingInfo();
+          hideCarInfo();
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') keys.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') keys.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') keys.right = false;
+      if (e.code === 'Space') keys.space = false;
+    });
+
+    // Touch Device Detection & On-Screen Button Bindings
+    function isTouchDevice() {
+      return ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    }
+
+    function bindTouchButton(id, keyProp) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      const press = (e) => {
+        e.preventDefault();
+        keys[keyProp] = true;
+        btn.classList.add('pressed');
+      };
+      const release = (e) => {
+        e.preventDefault();
+        keys[keyProp] = false;
+        btn.classList.remove('pressed');
+      };
+      btn.addEventListener('pointerdown', press);
+      btn.addEventListener('pointerup', release);
+      btn.addEventListener('pointerleave', release);
+      btn.addEventListener('pointercancel', release);
+    }
+
+    bindTouchButton('t-up', 'up');
+    bindTouchButton('t-down', 'down');
+    bindTouchButton('t-left', 'left');
+    bindTouchButton('t-right', 'right');
+    bindTouchButton('t-handbrake', 'space');
 
     // ==========================================
-    // 14. UI CONTROLS & RESIZE HANDLER
+    // 15. UI CONTROLS & RESIZE HANDLER
     // ==========================================
     const speedSlider = document.getElementById('speed-slider');
     const speedValEl = document.getElementById('speed-val');
@@ -1419,7 +2223,7 @@
     });
 
     // ==========================================
-    // 15. INITIALIZE & ANIMATION LOOP
+    // 16. INITIALIZE & ANIMATION LOOP
     // ==========================================
     generateCity(currentSeed);
 
@@ -1436,11 +2240,20 @@
 
       const trafficStates = getTrafficStates(trafficClock);
       updateTrafficLightsVisuals(trafficStates);
-      updateCars(simDt, trafficStates);
+
+      // Player car always updates with real frame delta so driving remains responsive even if simSpeed is low
+      updateDrivenCar(rawDt);
+      updateAICars(simDt, trafficStates);
       updatePedestrians(simDt, elapsedTotal);
       updateDayNightCycle(rawDt);
+      updateCarInspectorLiveStats();
 
-      controls.update();
+      if (drivenCar || camReturnLerp > 0) {
+        updateDriveCamera(rawDt);
+      } else {
+        controls.update();
+      }
+
       renderer.render(scene, camera);
     }
 
