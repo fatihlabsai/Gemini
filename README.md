@@ -2,14 +2,14 @@
 
 **Simitçi**, İstanbul'un Karaköy–Eminönü sahilinde klasik kırmızı ve camlı bir **simit arabasının** arkasında durduğunuz, tamamen tek dosyada çalışan (`index.html`), 3B WebGL tabanlı bir birinci şahıs (First-Person POV) esnaf ve zaman yönetimi oyunudur.
 
-Hiçbir harici görsel, ses dosyası veya 3B model kullanmadan; tüm dokular, İstanbul silüeti, vapurlar, ürünler ve ses efektleri **Three.js (v0.160.0)** ve **Web Audio API** ile kod içinde prosedürel olarak üretilir.
+Hiçbir harici görsel, ses dosyası veya 3B model kullanmadan; tüm dokular, panoramik İstanbul Boğazı silüeti, Süleymaniye ve Sultanahmet camileri, Galata Kulesi, Şehir Hatları vapurları, eklemli yürüyen müşteriler, ürünler ve ses efektleri **Three.js (v0.160.0)** ve **Web Audio API** ile kod içinde prosedürel olarak üretilir.
 
 ---
 
 ## 🎮 Nasıl Oynanır & Kontroller
 
 1. **Siparişi Hazırla:**
-   - Tezgahın önüne gelen müşterilerin konuşma balonundaki siparişlerini takip edin.
+   - Tezgahın önüne gelen müşterilerin sağ üstteki konuşma balonundaki siparişlerini takip edin.
    - Tezgah üzerindeki **3B ürünlere doğrudan fareyle/dokunarak** veya ekranın altındaki **ürün kartlarına** (ya da klavyeden `1`–`9` tuşlarına) basarak ürünleri kese kağıdına/tepsiye ekleyin.
    - Yanlış eklediğiniz bir ürünü tepsi listesinden tıklayarak geri bırakabilirsiniz.
    - Hazır olduğunuzda **"🤝 Müşteriye Ver"** düğmesine (veya `Enter` tuşuna) basın.
@@ -17,7 +17,7 @@ Hiçbir harici görsel, ses dosyası veya 3B model kullanmadan; tüm dokular, İ
 2. **Para Üstü Hesapla:**
    - Müşteri bazen tam para, bazen de büyük banknot (50 ₺, 100 ₺, 200 ₺) uzatır.
    - Açılan kasada `1 ₺`, `2 ₺`, `5 ₺`, `10 ₺`, `20 ₺`, `50 ₺`, `100 ₺` düğmelerine tıklayarak doğru para üstünü tamamlayın ve **"✅ Hesabı Kapat & Teslim Et"** düğmesine basın.
-   - Hızlı ve doğru servis bol **bahşiş** ve **itibar yıldızı (★)** kazandırır!
+   - Hızlı ve doğru servis **bahşiş** ve **itibar yıldızı (★)** kazandırır; yalnızca yanlış sipariş, yanlış para üstü veya müşteriyi bekletip kaçırmak itibarı düşürür.
 
 3. **Çaydanlık & Stok Yönetimi:**
    - Semaverdeki çay azaldığında üst bardaki **"🫖 Çay Demle (15₺)"** düğmesiyle taze çay demleyin.
@@ -38,9 +38,9 @@ Hiçbir harici görsel, ses dosyası veya 3B model kullanmadan; tüm dokular, İ
 Oyuna İstanbul ruhunu ve eğlencesini katmak için eklenen özgün mekanikler:
 
 1. **🐦 Hırçın Boğaz Martısı Baskını (Simit Hırsızı Martı):**
-   - Boğaz'da süzülen martılardan biri zaman zaman tezgahınıza doğru pike yapar! Martı tezgaha ulaşmadan önce **3B martının üzerine tıklayarak** onu kovalamazsanız tezgahtan bir çıtır simit kapıp kaçar.
+   - Boğaz'da süzülen martılardan biri oyunun ilk dakikalarında (ve sonrasında rastgele aralıklarla) tezgahınıza doğru pike yapar! Martı tezgaha ulaşmadan önce **3B martının üzerine tıklayarak** onu kovalamazsanız tezgahtan bir çıtır simit kapıp kaçar.
 2. **🐾 Sokak Kedisi "Tekir" ve Bereket Bahşişi:**
-   - İstanbul'un meşhur sokak kedisi Tekir ara sıra tezgahın önüne zıplayıp miyavlayarak kaşarlı simit veya krem peynir ister. Tekir'i beslerseniz para ödemez ama tezgahınızın bereketi ve itibarı artar, çevredeki turistler sempatiden **20 ₺ uğur bahşişi** bırakır.
+   - İstanbul'un meşhur sokak kedisi Tekir ilk birkaç müşteriden hemen sonra (ve gün içinde ara sıra) tezgahın önüne zıplayıp miyavlayarak kaşarlı simit veya krem peynir ister. Tekir'i beslerseniz para ödemez ama tezgahınızın itibarı artar, çevredeki turistler sempatiden **20 ₺ uğur bahşişi** bırakır.
 3. **📻 Nostaljik Hicaz FM Radyo & Dinamik Boğaz Havası:**
    - Tezgahın köşesindeki ahşap radyodan Web Audio API ile canlı sentezlenen **Hicaz makamı** nağmeleri yükselir; radyo açıkken müşteriler daha neşeli olur ve daha yüksek bahşiş bırakır. Ayrıca her gün **Güneşli Boğaz Havası**, **Poyraz Esintisi** veya **Boğaz Yağmuru** (3B yağmur efektli) gibi dinamik hava durumları yaşanır.
 4. **🎯 Günlük Esnaf Hedefi & Teyze Pazarlığı:**
