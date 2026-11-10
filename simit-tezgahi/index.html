@@ -1,0 +1,3503 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Simitçi — İstanbul Boğazında Bir Gün</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='32' cy='28' r='26' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23f5b95f'/%3E%3Cstop offset='0.65' stop-color='%23c97724'/%3E%3Cstop offset='1' stop-color='%237a3e09'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='26' fill='url(%23g)' stroke='%23592c04' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='11' fill='%231b263b' stroke='%23592c04' stroke-width='2'/%3E%3Cg fill='%23fff3d1'%3E%3Cellipse cx='32' cy='10' rx='2.2' ry='1.1' transform='rotate(12 32 10)'/%3E%3Cellipse cx='46' cy='15' rx='2.2' ry='1.1' transform='rotate(40 46 15)'/%3E%3Cellipse cx='53' cy='29' rx='2.2' ry='1.1' transform='rotate(75 53 29)'/%3E%3Cellipse cx='49' cy='45' rx='2.2' ry='1.1' transform='rotate(-35 49 45)'/%3E%3Cellipse cx='35' cy='53' rx='2.2' ry='1.1' transform='rotate(8 35 53)'/%3E%3Cellipse cx='19' cy='49' rx='2.2' ry='1.1' transform='rotate(32 19 49)'/%3E%3Cellipse cx='11' cy='35' rx='2.2' ry='1.1' transform='rotate(-65 11 35)'/%3E%3Cellipse cx='16' cy='18' rx='2.2' ry='1.1' transform='rotate(-25 16 18)'/%3E%3Cellipse cx='26' cy='14' rx='2' ry='1'/%3E%3Cellipse cx='41' cy='22' rx='2' ry='1'/%3E%3Cellipse cx='43' cy='39' rx='2' ry='1'/%3E%3Cellipse cx='23' cy='41' rx='2' ry='1'/%3E%3C/g%3E%3C/svg%3E">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+  :root {
+    --red: #b71c1c;
+    --red-dark: #7f0000;
+    --gold: #f6c453;
+    --cream: #fdf7ec;
+    --ink: #1a1d24;
+    --glass: rgba(20, 24, 33, 0.78);
+    --glass-light: rgba(253, 247, 236, 0.95);
+    --green: #2e7d32;
+    --teal: #00695c;
+  }
+  * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #0d131a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--cream);
+  }
+  #canvas-container {
+    position: fixed; inset: 0; width: 100%; height: 100%; z-index: 1;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* HUD OVERLAY */
+  #hud {
+    position: fixed; inset: 0; z-index: 10; pointer-events: none;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 10px 14px;
+  }
+  .hud-top {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+    flex-wrap: wrap;
+  }
+  .hud-card {
+    background: var(--glass);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(246, 196, 83, 0.45);
+    border-radius: 12px;
+    padding: 7px 13px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.38);
+    pointer-events: auto;
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .brand-badge {
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 5px 11px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    font-size: 17px;
+    color: var(--cream);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  .stat-item {
+    display: flex; flex-direction: column; line-height: 1.15;
+  }
+  .stat-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: #cbd5e1; opacity: 0.85;
+  }
+  .stat-value {
+    font-size: 16px; font-weight: 800; color: var(--gold);
+  }
+  .stat-value.money { color: #69f0ae; font-size: 19px; }
+  .stars { color: var(--gold); font-size: 15px; letter-spacing: 1px; }
+
+  .rush-banner {
+    background: linear-gradient(90deg, #ff6f00, #d84315);
+    color: #fff; font-weight: 800; font-size: 12px;
+    padding: 4px 10px; border-radius: 999px;
+    animation: pulse 1.2s infinite alternate;
+    display: none;
+  }
+  .weather-badge {
+    font-size: 12px; font-weight: 700; color: #e1f5fe;
+    background: rgba(2, 136, 209, 0.35);
+    padding: 4px 10px; border-radius: 999px;
+    border: 1px solid rgba(179,229,252,0.45);
+  }
+  @keyframes pulse {
+    from { transform: scale(1); box-shadow: 0 0 0 rgba(255,111,0,0); }
+    to { transform: scale(1.05); box-shadow: 0 0 14px rgba(255,111,0,0.8); }
+  }
+
+  .hud-controls {
+    display: flex; gap: 7px; align-items: center; flex-wrap: wrap;
+  }
+  .icon-btn {
+    pointer-events: auto;
+    background: var(--glass);
+    color: var(--cream);
+    border: 1.5px solid rgba(246, 196, 83, 0.5);
+    border-radius: 10px;
+    padding: 7px 11px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .icon-btn:hover { background: rgba(183, 28, 28, 0.85); transform: translateY(-1px); }
+  .icon-btn:active { transform: translateY(1px); }
+  .icon-btn.highlight {
+    background: linear-gradient(135deg, #e65100, #bf360c);
+    border-color: #ffcc80;
+  }
+
+  /* CUSTOMER SPEECH BUBBLE (Positioned neatly so it doesn't block the Bosphorus view) */
+  #customer-panel {
+    position: fixed;
+    top: 66px;
+    right: 16px;
+    z-index: 12;
+    width: min(410px, 92vw);
+    pointer-events: none;
+    transition: all 0.25s ease;
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  #customer-panel.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .speech-bubble {
+    background: var(--glass-light);
+    color: var(--ink);
+    border: 2.5px solid var(--red);
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.42);
+    position: relative;
+    pointer-events: auto;
+  }
+  .cust-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 5px;
+  }
+  .cust-name {
+    font-weight: 900; font-size: 14px; color: var(--red-dark);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .cust-mood { font-size: 18px; }
+  .patience-wrap {
+    width: 120px; height: 9px; background: #e2e8f0;
+    border-radius: 99px; overflow: hidden; border: 1px solid #94a3b8;
+  }
+  .patience-bar {
+    height: 100%; width: 100%;
+    background: linear-gradient(90deg, #2e7d32, #8bc34a);
+    transition: width 0.15s linear, background 0.3s ease;
+  }
+  .cust-dialogue {
+    font-size: 13.5px; font-weight: 600; margin: 3px 0 7px 0;
+    line-height: 1.32;
+  }
+  .order-chips {
+    display: flex; flex-wrap: wrap; gap: 5px;
+  }
+  .order-chip {
+    background: #fff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .order-chip.fulfilled {
+    background: #dcfce7; border-color: #16a34a; color: #14532d;
+  }
+
+  /* BOTTOM WORKSTATION HUD */
+  .hud-bottom {
+    display: flex; flex-direction: column; gap: 6px;
+    width: min(980px, 98vw); margin: 0 auto;
+  }
+  .tray-and-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; flex-wrap: wrap;
+  }
+  .tray-box {
+    flex: 1; min-width: 260px;
+    background: var(--glass);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(246, 196, 83, 0.45);
+    border-radius: 12px;
+    padding: 6px 12px;
+    pointer-events: auto;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .tray-items {
+    display: flex; flex-wrap: wrap; gap: 5px; align-items: center;
+    min-height: 24px;
+  }
+  .tray-pill {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(246,196,83,0.5);
+    color: #fff;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .tray-pill:hover { background: rgba(229,57,53,0.55); }
+  .action-buttons {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .btn {
+    pointer-events: auto;
+    border: none; border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 800; font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+  .btn-serve {
+    background: linear-gradient(135deg, #2e7d32, #1b5e20);
+    color: #fff; border: 1.5px solid #81c784;
+    box-shadow: 0 4px 12px rgba(46,125,50,0.45);
+  }
+  .btn-serve:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.1); }
+  .btn-clear {
+    background: rgba(255,255,255,0.12); color: #f8fafc;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .btn-clear:hover:not(:disabled) { background: rgba(229,57,53,0.6); }
+
+  /* PRODUCT SHELF BAR */
+  .product-bar {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+    pointer-events: auto;
+  }
+  @media (max-width: 820px) {
+    .product-bar { grid-template-columns: repeat(5, 1fr); }
+  }
+  .prod-card {
+    background: var(--glass);
+    backdrop-filter: blur(6px);
+    border: 1.5px solid rgba(246, 196, 83, 0.38);
+    border-radius: 10px;
+    padding: 5px 5px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; position: relative;
+  }
+  .prod-card:hover {
+    background: rgba(183, 28, 28, 0.72);
+    border-color: var(--gold);
+    transform: translateY(-2px);
+  }
+  .prod-card:active { transform: translateY(1px); }
+  .prod-card.out-of-stock {
+    opacity: 0.48; border-color: #ef5350;
+  }
+  .prod-icon { font-size: 18px; line-height: 1.1; }
+  .prod-name { font-size: 11px; font-weight: 800; color: #fff; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .prod-meta {
+    display: flex; justify-content: space-between; width: 100%;
+    font-size: 10px; margin-top: 2px; padding: 0 2px;
+  }
+  .prod-price { color: var(--gold); font-weight: 800; }
+  .prod-stock { color: #a5d6a7; font-weight: 700; }
+  .prod-stock.low { color: #ff8a80; }
+  .prod-key {
+    position: absolute; top: 3px; left: 5px;
+    font-size: 9px; color: #94a3b8; font-weight: 700;
+  }
+
+  /* CASHIER / CHANGE MODAL */
+  #cashier-modal {
+    position: fixed; inset: 0; z-index: 25;
+    background: rgba(10, 14, 20, 0.65);
+    backdrop-filter: blur(5px);
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  #cashier-modal.active { display: flex; }
+  .modal-card {
+    background: linear-gradient(180deg, #1e2530, #12171f);
+    border: 2px solid var(--gold);
+    border-radius: 18px;
+    padding: 20px 24px;
+    width: min(500px, 95vw);
+    color: var(--cream);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+  }
+  .modal-title {
+    font-size: 20px; font-weight: 900; color: var(--gold);
+    margin: 0 0 12px 0; display: flex; justify-content: space-between; align-items: center;
+  }
+  .cash-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px;
+    margin-bottom: 14px; text-align: center;
+  }
+  .cash-cell .lbl { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+  .cash-cell .val { font-size: 22px; font-weight: 900; margin-top: 2px; }
+  .money-buttons {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-bottom: 14px;
+  }
+  .money-btn {
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 10px;
+    padding: 10px 6px;
+    font-weight: 900; font-size: 15px;
+    cursor: pointer; color: #111;
+    transition: transform 0.1s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  .money-btn:hover { transform: scale(1.04); }
+  .money-btn:active { transform: scale(0.97); }
+  .money-btn.coin {
+    background: radial-gradient(circle at 30% 30%, #ffe082, #ca8a04);
+    border-radius: 999px;
+  }
+  .money-btn.note-5 { background: linear-gradient(135deg, #d7ccc8, #a1887f); }
+  .money-btn.note-10 { background: linear-gradient(135deg, #f8bbd0, #e57373); }
+  .money-btn.note-20 { background: linear-gradient(135deg, #c8e6c9, #81c784); }
+  .money-btn.note-50 { background: linear-gradient(135deg, #ffe0b2, #ffb74d); }
+  .money-btn.note-100 { background: linear-gradient(135deg, #bbdefb, #64b5f6); }
+
+  /* RESTOCK & TEA DRAWER MODAL */
+  #restock-modal, #summary-modal, #title-screen {
+    position: fixed; inset: 0; z-index: 30;
+    background: rgba(9, 13, 20, 0.78);
+    backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  #restock-modal.active, #summary-modal.active, #title-screen.active { display: flex; }
+  .wide-modal {
+    width: min(680px, 96vw);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .restock-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px; margin: 12px 0;
+  }
+  .restock-item {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(246,196,83,0.3);
+    border-radius: 10px; padding: 10px;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 8px;
+  }
+  .restock-item-top {
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 800; font-size: 14px;
+  }
+
+  /* TITLE SCREEN */
+  .title-card {
+    background: linear-gradient(160deg, rgba(28, 33, 43, 0.95), rgba(15, 19, 26, 0.98));
+    border: 2.5px solid var(--gold);
+    border-radius: 22px;
+    padding: 28px 32px;
+    width: min(640px, 95vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    text-align: center;
+    box-shadow: 0 25px 70px rgba(0,0,0,0.8);
+  }
+  .title-logo {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--red), var(--red-dark));
+    border: 3px solid var(--gold);
+    border-radius: 16px;
+    padding: 10px 28px;
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--cream);
+    text-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    margin-bottom: 6px;
+  }
+  .title-sub {
+    color: var(--gold); font-size: 15px; font-weight: 700; margin-bottom: 18px;
+  }
+  .how-to-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    text-align: left; margin-bottom: 20px;
+  }
+  @media (max-width: 560px) { .how-to-grid { grid-template-columns: 1fr; } }
+  .how-box {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(246,196,83,0.28);
+    border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4;
+  }
+  .how-box strong { color: var(--gold); display: block; margin-bottom: 3px; }
+
+  /* FLOATING TOASTS & 3D LABELS */
+  #toast-container {
+    position: fixed; top: 42%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 40; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .toast {
+    background: rgba(20, 24, 33, 0.92);
+    border: 2px solid var(--gold);
+    color: #fff; font-weight: 800; font-size: 15px;
+    padding: 8px 18px; border-radius: 999px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    animation: floatUp 1.9s ease forwards;
+  }
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translateY(15px) scale(0.9); }
+    15% { opacity: 1; transform: translateY(0) scale(1); }
+    80% { opacity: 1; transform: translateY(-18px); }
+    100% { opacity: 0; transform: translateY(-30px); }
+  }
+
+  /* 3D HOVER TOOLTIP */
+  #hover-tooltip {
+    position: fixed; z-index: 20; pointer-events: none;
+    background: rgba(15, 19, 26, 0.92);
+    border: 1.5px solid var(--gold);
+    color: var(--cream);
+    padding: 5px 10px; border-radius: 8px;
+    font-size: 12px; font-weight: 800;
+    display: none; transform: translate(-50%, -130%);
+    white-space: nowrap;
+  }
+
+  /* DAILY GOAL PILL */
+  .goal-pill {
+    background: rgba(0, 105, 92, 0.65);
+    border: 1px solid #4db6ac;
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 12px; font-weight: 700; color: #e0f2f1;
+  }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div id="hover-tooltip"></div>
+<div id="toast-container"></div>
+
+<!-- MAIN HUD -->
+<div id="hud">
+  <div class="hud-top">
+    <div class="hud-card">
+      <div class="brand-badge">SİMİTÇİ</div>
+      <div class="stat-item">
+        <span class="stat-label">Kasa</span>
+        <span class="stat-value money" id="hud-money">120 ₺</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Gün & Saat</span>
+        <span class="stat-value" id="hud-clock">Gün 1 • 07:30</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">İtibar</span>
+        <span class="stars" id="hud-rep">★★★★★</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Çaydanlık</span>
+        <span class="stat-value" id="hud-tea">100%</span>
+      </div>
+      <span class="rush-banner" id="rush-banner">🔥 ZİRVE SAATİ!</span>
+      <span class="weather-badge" id="weather-badge">☀️ Açık Boğaz Havası</span>
+      <span class="goal-pill" id="goal-pill">🎯 Hedef: 8 Müşteri (0/8)</span>
+    </div>
+
+    <div class="hud-controls">
+      <button class="icon-btn highlight" id="btn-brew-tea" title="Çay Demle (15 ₺)">🫖 Çay Demle (15₺)</button>
+      <button class="icon-btn" id="btn-open-restock" title="Stok Yenile">📦 Stok & Tezgah</button>
+      <button class="icon-btn" id="btn-radio" title="Tezgah Radyosu">📻 Radyo: Açık</button>
+      <button class="icon-btn" id="btn-mute" title="Sesi Aç/Kapat">🔊 Ses</button>
+    </div>
+  </div>
+
+  <!-- CUSTOMER SPEECH & ORDER -->
+  <div id="customer-panel">
+    <div class="speech-bubble">
+      <div class="cust-header">
+        <div class="cust-name">
+          <span class="cust-mood" id="cust-mood">😊</span>
+          <span id="cust-title">Müşteri</span>
+        </div>
+        <div class="patience-wrap">
+          <div class="patience-bar" id="patience-bar"></div>
+        </div>
+      </div>
+      <div class="cust-dialogue" id="cust-dialogue">"Günaydın usta, iki çıtır simit bir de taze çay alayım!"</div>
+      <div class="order-chips" id="order-chips"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR -->
+  <div class="hud-bottom">
+    <div class="tray-and-actions">
+      <div class="tray-box">
+        <div>
+          <div class="stat-label">Kese Kağıdı / Tepsi (Çıkarmak için ürüne tıkla)</div>
+          <div class="tray-items" id="tray-items">
+            <span style="color:#94a3b8;font-size:12px;">Tezgah üzerindeki 3B ürünlere veya aşağıdaki düğmelere tıklayın...</span>
+          </div>
+        </div>
+        <div style="text-align:right;min-width:95px;">
+          <div class="stat-label">Toplam Tutar</div>
+          <div class="stat-value" id="tray-total">0 ₺</div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn btn-clear" id="btn-clear-tray" disabled>Temizle</button>
+        <button class="btn btn-serve" id="btn-serve" disabled>🤝 Müşteriye Ver</button>
+      </div>
+    </div>
+
+    <div class="product-bar" id="product-bar"></div>
+  </div>
+</div>
+
+<!-- CASHIER / CHANGE MODAL -->
+<div id="cashier-modal">
+  <div class="modal-card">
+    <div class="modal-title">
+      <span>💵 Para Üstü Ver</span>
+      <span id="cash-cust-name" style="font-size:14px;color:#cbd5e1;"></span>
+    </div>
+    <div class="cash-grid">
+      <div class="cash-cell">
+        <div class="lbl">Sipariş Tutarı</div>
+        <div class="val" id="cash-due">0 ₺</div>
+      </div>
+      <div class="cash-cell">
+        <div class="lbl">Müşterinin Verdiği</div>
+        <div class="val" id="cash-paid" style="color:var(--gold);">0 ₺</div>
+      </div>
+      <div class="cash-cell">
+        <div class="lbl">Verilen Para Üstü</div>
+        <div class="val" id="cash-given" style="color:#69f0ae;">0 ₺</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:#cbd5e1;margin-bottom:8px;text-align:center;">
+      Doğru para üstünü tamamlamak için madeni para ve banknotlara tıklayın:
+    </div>
+    <div class="money-buttons">
+      <button class="money-btn coin" data-val="1">+1 ₺</button>
+      <button class="money-btn coin" data-val="2">+2 ₺</button>
+      <button class="money-btn note-5" data-val="5">+5 ₺</button>
+      <button class="money-btn note-10" data-val="10">+10 ₺</button>
+      <button class="money-btn note-20" data-val="20">+20 ₺</button>
+      <button class="money-btn note-50" data-val="50">+50 ₺</button>
+      <button class="money-btn note-100" data-val="100">+100 ₺</button>
+      <button class="money-btn" style="background:#ef5350;color:#fff;" id="btn-reset-change">Sıfırla</button>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button class="btn btn-serve" id="btn-confirm-change" style="width:100%;justify-content:center;">✅ Hesabı Kapat & Teslim Et</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESTOCK MODAL -->
+<div id="restock-modal">
+  <div class="modal-card wide-modal">
+    <div class="modal-title">
+      <span>📦 Tezgah Stokları & İkmal</span>
+      <button class="btn btn-clear" id="btn-close-restock">Kapat ✕</button>
+    </div>
+    <div style="font-size:13px;color:#cbd5e1;margin-bottom:10px;">
+      Eksilen ürünleri toptan fiyatına tamamlayın. Taze ürünler müşterileri memnun eder!
+    </div>
+    <div class="restock-list" id="restock-list"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15);">
+      <span style="font-size:14px;font-weight:700;">Kasadaki Para: <strong style="color:#69f0ae;" id="restock-money">0 ₺</strong></span>
+      <button class="btn btn-serve" id="btn-restock-all">⚡ Tüm Eksikleri Doldur</button>
+    </div>
+  </div>
+</div>
+
+<!-- END OF DAY SUMMARY & UPGRADES MODAL -->
+<div id="summary-modal">
+  <div class="modal-card wide-modal">
+    <div class="modal-title">
+      <span id="sum-title">🌙 Gün Sonu Özeti — Gün 1</span>
+      <span id="sum-rep" style="color:var(--gold);">★★★★★</span>
+    </div>
+    <div class="cash-grid" style="grid-template-columns: repeat(4, 1fr);">
+      <div class="cash-cell">
+        <div class="lbl">Hizmet Edilen</div>
+        <div class="val" id="sum-served">0</div>
+      </div>
+      <div class="cash-cell">
+        <div class="lbl">Günlük Ciro</div>
+        <div class="val" id="sum-earned" style="color:#69f0ae;">0 ₺</div>
+      </div>
+      <div class="cash-cell">
+        <div class="lbl">En Yüksek Bahşiş</div>
+        <div class="val" id="sum-best-tip" style="color:var(--gold);">0 ₺</div>
+      </div>
+      <div class="cash-cell">
+        <div class="lbl">Toplam Kasa</div>
+        <div class="val" id="sum-total-cash">0 ₺</div>
+      </div>
+    </div>
+
+    <h3 style="margin:14px 0 8px 0;color:var(--gold);font-size:16px;">🛠️ Tezgah Geliştirmeleri (Ertesi Gün İçin)</h3>
+    <div class="restock-list" id="upgrade-list"></div>
+
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-serve" id="btn-next-day" style="font-size:16px;padding:12px 24px;">🌅 Yeni Güne Başla (Stokları Tazele)</button>
+    </div>
+  </div>
+</div>
+
+<!-- TITLE SCREEN -->
+<div id="title-screen" class="active">
+  <div class="title-card">
+    <div class="title-logo">SİMİTÇİ</div>
+    <div class="title-sub">İstanbul Boğazı'nda Sıcak Simit, İnce Belli Çay ve Ekmek Parası</div>
+    <p style="font-size:14px;color:#e2e8f0;line-height:1.5;margin-bottom:18px;">
+      Karaköy - Eminönü sahilinde klasik kırmızı simit arabanızın arkasındasınız. Boğaz'dan vapurlar geçerken, Süleymaniye ve Galata Kulesi'nin gölgesinde İstanbullulara sıcak simit, poğaça ve taze demlenmiş çay yetiştirin!
+    </p>
+    <div class="how-to-grid">
+      <div class="how-box">
+        <strong>🥨 1. Siparişi Hazırla</strong>
+        Müşterinin istediği ürünleri 3B tezgahtan veya alt bardan seçip kese kağıdına ekleyin ve <em>"Müşteriye Ver"</em> düğmesine basın.
+      </div>
+      <div class="how-box">
+        <strong>💵 2. Para Üstü & Pazarlık</strong>
+        Müşterinin verdiği paraya göre doğru para üstünü hesaplayın. Teyzeler pazarlık yapabilir, hızlı servis bol bahşiş kazandırır!
+      </div>
+      <div class="how-box">
+        <strong>🫖 3. Çaydanlık & Stok</strong>
+        Semaverdeki çay azaldığında <em>"Çay Demle"</em> ile tazeleyin. Eksilen ürünleri <em>"Stok & Tezgah"</em> menüsünden tamamlayın.
+      </div>
+      <div class="how-box">
+        <strong>🐦 4. Martılar & Sokak Kedileri</strong>
+        Alçalan hırçın martılara tıklayarak simitlerinizi çalmasını önleyin! Miyavlayan sokak kedisi Tekir'i beslemek ise uğur ve itibar getirir.
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-serve" id="btn-start-game" style="font-size:18px;padding:13px 32px;">🚀 Tezgahı Aç ve Başla</button>
+      <button class="btn btn-clear" id="btn-reset-save" style="font-size:13px;">Kayıtlı Veriyi Sıfırla</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============================================================================
+   1. PRODUCT CATALOG & UPGRADES CONFIGURATION
+   ============================================================================ */
+const PRODUCTS = [
+  { id: 'simit',   name: 'Çıtır Simit',    price: 15, cost: 7,  maxStock: 20, icon: '🥨', key: '1' },
+  { id: 'cay',     name: 'İnce Belli Çay', price: 10, cost: 3,  maxStock: 99, icon: '🫖', key: '2', isTea: true },
+  { id: 'pogaca',  name: 'Sıcak Poğaça',   price: 18, cost: 8,  maxStock: 14, icon: '🥐', key: '3' },
+  { id: 'acma',    name: 'Yumuşak Açma',   price: 20, cost: 9,  maxStock: 14, icon: '🥯', key: '4' },
+  { id: 'kasarli', name: 'Kaşarlı Simit',  price: 28, cost: 14, maxStock: 12, icon: '🧀', key: '5' },
+  { id: 'su',      name: 'Soğuk Su',       price: 10, cost: 4,  maxStock: 18, icon: '💧', key: '6' },
+  { id: 'ayran',   name: 'Köpüklü Ayran',  price: 15, cost: 7,  maxStock: 15, icon: '🥛', key: '7' },
+  { id: 'peynir',  name: 'Krem Peynir',    price: 12, cost: 5,  maxStock: 16, icon: '🧈', key: '8' },
+  { id: 'nutella', name: 'Mini Çikolata',  price: 16, cost: 7,  maxStock: 16, icon: '🍫', key: '9' }
+];
+
+const UPGRADES = [
+  { id: 'samovar',  name: 'Büyük Bakır Semaver', desc: 'Çay kapasitesi %60 artar, çay daha yavaş biter.', cost: 140, icon: '🫖' },
+  { id: 'umbrella', name: 'Gösterişli Tente',    desc: 'Yağmurda ve güneşte müşterilerin sabrı %25 uzar.', cost: 180, icon: '⛱️' },
+  { id: 'shelf',    name: 'Genişletilmiş Cam Vitrin', desc: 'Tüm ürünlerin maksimum stok kapasitesi +8 artar.', cost: 220, icon: '🗄️' },
+  { id: 'radio',    name: 'Nostaljik FM Radyo',  desc: 'Nağmeler müşterileri neşelendirir, bahşişler %35 artar.', cost: 160, icon: '📻' },
+  { id: 'warmer',   name: 'Közlü Isıtıcı Izgara', desc: 'Simit ve poğaçalar hep sıcak kalır, satış fiyatlarına +3₺ lezzet primi eklenir.', cost: 260, icon: '🔥' }
+];
+
+const CUSTOMER_TYPES = [
+  {
+    type: 'office', title: 'Plaza Çalışanı', speed: 1.35, patience: 22,
+    dialogues: [
+      'Günaydın usta, vapura yetişeceğim! Hızlıca şunları alayım:',
+      'Toplantıya geç kaldım, çabuk sarabilir misin usta?',
+      'Kolay gelsin, sabah kahvaltısını yolda yapacağım:'
+    ],
+    pool: ['simit', 'kasarli', 'pogaca', 'cay', 'peynir', 'su']
+  },
+  {
+    type: 'student', title: 'Üniversite Öğrencisi', speed: 1.15, patience: 28,
+    dialogues: [
+      'Abi selam, derse yetişiyoruz, öğrenci işi şunlardan verir misin?',
+      'Usta günaydın, vize haftası başladı, enerji lazım:',
+      'Kolay gelsin abi, kampüs yolunda atıştırmalık alayım:'
+    ],
+    pool: ['simit', 'pogaca', 'ayran', 'nutella', 'cay']
+  },
+  {
+    type: 'tourist', title: 'Turist (Tourist)', speed: 0.95, patience: 35,
+    dialogues: [
+      'Hello my friend! The Bosphorus view is amazing! Can I get Turkish tea & simit please?',
+      'Good morning! Merhaba! Everyone recommended your sesame bagels. Could I have:',
+      'Hi! One traditional Turkish breakfast combo from your lovely cart please:'
+    ],
+    pool: ['simit', 'cay', 'nutella', 'peynir', 'su', 'kasarli']
+  },
+  {
+    type: 'teyze', title: 'Mahalleli Teyze (Pazarlıkçı)', speed: 0.85, patience: 30, bargains: true,
+    dialogues: [
+      'Evladım simitler taze mi? Bak torunlara götüreceğim, biraz da indirim yaparsın artık:',
+      'Kolay gelsin oğlum, pek de güzel kokmuş! Şunları ver bakalım, fiyatta da güzellik yap:',
+      'Hayırlı işler yavrum, komşularla çay saati yapacağız, şunları hazırlayıver:'
+    ],
+    pool: ['simit', 'acma', 'pogaca', 'peynir', 'cay']
+  },
+  {
+    type: 'amca', title: 'Emekli Salih Amca', speed: 0.82, patience: 36,
+    dialogues: [
+      'Bereketli olsun evlat! Eskiden Boğaz’da lüfer zoka ile tutulurdu... Neyse, bana şunları ver:',
+      'Selamünaleyküm usta, demli bir çay koy da içimiz ısınsın, yanına da:',
+      'Hayırlı sabahlar, gazetemi aldım, sahilde martılara baka baka kahvaltı edeyim:'
+    ],
+    pool: ['cay', 'simit', 'peynir', 'su']
+  },
+  {
+    type: 'child', title: 'Harçlıklı Çocuk', speed: 1.25, patience: 27,
+    dialogues: [
+      'Simitçi abi! Annem bozuk para verdi, sıcak simitle çikolata alacağım!',
+      'Abi kolay gelsin, okuldan çıktık çok acıktım, şunları alabilir miyim?',
+      'Usta! Şu çikolatalıdan ve çıtır simitten verir misin lütfen?'
+    ],
+    pool: ['simit', 'nutella', 'ayran', 'pogaca']
+  },
+  {
+    type: 'fisherman', title: 'Galata Balıkçısı', speed: 0.95, patience: 32,
+    dialogues: [
+      'Rastgele usta! Sabah suyunda istavrit çektik, bi sıcak çayınla karnımızı doyuralım:',
+      'Kolay gelsin kaptan, köprü üstü rüzgarlı, içimizi ısıtacak şunları ver bakalım:',
+      'Bereketli işler! Kovayı doldurduk şükür, şimdi sıra kahvaltıda:'
+    ],
+    pool: ['cay', 'kasarli', 'simit', 'ayran', 'pogaca']
+  },
+  {
+    type: 'taxidriver', title: 'Taksici Erol Abi', speed: 1.3, patience: 22,
+    dialogues: [
+      'Usta dörtlüleri yaktım bekliyorum, trafik açılmadan hemen şunları uzatıver!',
+      'Hayırlı işler kral, nöbet değişimine gidiyorum, ayaküstü atıştıralım:',
+      'Kolay gelsin kardeşim, köprü trafiği fena, bana hızlısından:'
+    ],
+    pool: ['cay', 'kasarli', 'acma', 'ayran', 'simit']
+  },
+  {
+    type: 'cat', title: 'Tekir (Sokak Kedisi)', speed: 1.15, patience: 30, isCat: true,
+    dialogues: [
+      'Miyavvv! 🐾 (Tekir tezgaha patisini dayadı, gözlerini kaşarlı simit ve krem peynire dikti! İkram edersen bereket ve itibar getirir)',
+      'Mrrrr~ Miyav! 🐾 (Kuyruğunu bacağına doluyor, küçük bir parça poğaça veya peynir bekliyor!)'
+    ],
+    pool: ['peynir', 'pogaca', 'kasarli', 'simit']
+  }
+];
+
+/* ============================================================================
+   2. PROCEDURAL WEB AUDIO ENGINE
+   ============================================================================ */
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.muted = false;
+    this.radioOn = true;
+    this.ambientStarted = false;
+    this.radioTimer = null;
+    this.seagullTimer = null;
+    this.ferryTimer = null;
+  }
+
+  init() {
+    if (this.ctx) return;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    this.ctx = new AudioCtx();
+    this.startAmbient();
+  }
+
+  resume() {
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  }
+
+  startAmbient() {
+    if (!this.ctx || this.ambientStarted) return;
+    this.ambientStarted = true;
+
+    const bufferSize = 2 * this.ctx.sampleRate;
+    const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < bufferSize; i++) {
+      const white = Math.random() * 2 - 1;
+      b0 = 0.997 * b0 + white * 0.029;
+      b1 = 0.985 * b1 + white * 0.032;
+      b2 = 0.950 * b2 + white * 0.045;
+      output[i] = (b0 + b1 + b2) * 0.16;
+    }
+
+    const whiteNoise = this.ctx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    whiteNoise.loop = true;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 260;
+
+    this.ambientGain = this.ctx.createGain();
+    this.ambientGain.gain.value = this.muted ? 0 : 0.24;
+
+    whiteNoise.connect(filter);
+    filter.connect(this.ambientGain);
+    this.ambientGain.connect(this.ctx.destination);
+    whiteNoise.start(0);
+
+    this.seagullTimer = setInterval(() => {
+      if (!this.muted && Math.random() < 0.55) this.playSeagull();
+    }, 6500);
+
+    this.ferryTimer = setInterval(() => {
+      if (!this.muted && Math.random() < 0.45) this.playFerryHorn();
+    }, 18500);
+
+    const hicazFreqs = [220.0, 233.08, 277.18, 293.66, 329.63, 349.23, 415.30, 440.0];
+    let noteIdx = 0;
+    this.radioTimer = setInterval(() => {
+      if (this.muted || !this.radioOn) return;
+      if (Math.random() < 0.65) {
+        const step = Math.random() < 0.7 ? (Math.random() < 0.5 ? 1 : -1) : (Math.random() < 0.5 ? 2 : -2);
+        noteIdx = Math.max(0, Math.min(hicazFreqs.length - 1, noteIdx + step));
+        this.playRadioNote(hicazFreqs[noteIdx]);
+      }
+    }, 650);
+  }
+
+  setMute(mute) {
+    this.muted = mute;
+    if (this.ambientGain && this.ctx) {
+      this.ambientGain.gain.setTargetAtTime(mute ? 0 : 0.24, this.ctx.currentTime, 0.1);
+    }
+  }
+
+  playRadioNote(freq) {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+    filter.type = 'bandpass';
+    filter.frequency.value = 900;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.025, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.55);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.58);
+  }
+
+  playSeagull() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    const base = 1350 + Math.random() * 350;
+    osc.frequency.setValueAtTime(base, now);
+    osc.frequency.linearRampToValueAtTime(base * 1.25, now + 0.12);
+    osc.frequency.exponentialRampToValueAtTime(base * 0.72, now + 0.48);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.045, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.52);
+  }
+
+  playFerryHorn() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    [98, 146.8].forEach(freq => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 280;
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(0.04, now + 0.35);
+      gain.gain.setValueAtTime(0.04, now + 1.4);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + 2.3);
+
+      osc.connect(lp);
+      lp.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 2.35);
+    });
+  }
+
+  playPop() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(640, now + 0.09);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.11);
+  }
+
+  playCoin() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    [1760, 2637].forEach((f, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now + idx * 0.06);
+      gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.28);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.06);
+      osc.stop(now + idx * 0.06 + 0.3);
+    });
+  }
+
+  playTeaPour() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.45);
+    const buf = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.25;
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(900, now);
+    bp.frequency.linearRampToValueAtTime(1600, now + 0.4);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.002, now + 0.44);
+
+    src.connect(bp);
+    bp.connect(gain);
+    gain.connect(this.ctx.destination);
+    src.start(now);
+  }
+
+  playSuccess() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(f, now + i * 0.07);
+      gain.gain.setValueAtTime(0.09, now + i * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.32);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + i * 0.07);
+      osc.stop(now + i * 0.07 + 0.34);
+    });
+  }
+
+  playError() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    [220, 175].forEach((f, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(f, now + i * 0.12);
+      gain.gain.setValueAtTime(0.08, now + i * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.25);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + i * 0.12);
+      osc.stop(now + i * 0.12 + 0.27);
+    });
+  }
+
+  playMeow() {
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(520, now);
+    osc.frequency.linearRampToValueAtTime(780, now + 0.14);
+    osc.frequency.exponentialRampToValueAtTime(430, now + 0.45);
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.09, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.46);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.48);
+  }
+}
+
+const sound = new SoundEngine();
+
+/* ============================================================================
+   3. PROCEDURAL TEXTURE GENERATORS
+   ============================================================================ */
+function createSesameTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, 512);
+  grad.addColorStop(0, '#c87321');
+  grad.addColorStop(0.5, '#d98932');
+  grad.addColorStop(1, '#9e500f');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 600; i++) {
+    ctx.fillStyle = Math.random() < 0.5 ? 'rgba(95,42,6,0.16)' : 'rgba(245,188,102,0.16)';
+    ctx.beginPath();
+    ctx.arc(Math.random() * 512, Math.random() * 512, 4 + Math.random() * 14, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  for (let i = 0; i < 1800; i++) {
+    ctx.save();
+    ctx.translate(Math.random() * 512, Math.random() * 512);
+    ctx.rotate(Math.random() * Math.PI);
+    ctx.fillStyle = Math.random() < 0.8 ? '#f8e3b4' : '#d79948';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 3.2, 1.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createCartSignTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#c62828');
+  g.addColorStop(1, '#7f0000');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 1024, 256);
+
+  ctx.strokeStyle = '#f6c453';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(14, 14, 996, 228);
+
+  ctx.fillStyle = '#fdf7ec';
+  ctx.font = '900 94px "Segoe UI", Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('TARİHİ BOĞAZ SİMİTÇİSİ', 512, 112);
+
+  ctx.fillStyle = '#f6c453';
+  ctx.font = '700 38px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('ÇITIR SİMİT • TAZE DEMLİ ÇAY • SICAK POĞAÇA', 512, 194);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createCobbleTexture() {
+  const c = document.createElement('canvas');
+  c.width = 512; c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#5c6670';
+  ctx.fillRect(0, 0, 512, 512);
+  const rows = 12, cols = 10;
+  const w = 512 / cols, h = 512 / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let col = 0; col < cols; col++) {
+      const offset = (r % 2) * (w * 0.5);
+      const x = (col * w + offset) % 512;
+      const y = r * h;
+      const shade = 125 + Math.floor(Math.random() * 38);
+      ctx.fillStyle = `rgb(${shade},${shade + 3},${shade + 6})`;
+      ctx.strokeStyle = '#3b4249';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(x + 2, y + 2, w - 4, h - 4, 6);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(14, 3);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createWaterNormalTexture() {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 256;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#8080ff';
+  ctx.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 450; i++) {
+    const x = Math.random() * 256;
+    const y = Math.random() * 256;
+    const rx = 14 + Math.random() * 25;
+    const ry = 3 + Math.random() * 6;
+    const g = ctx.createRadialGradient(x, y, 1, x, y, rx);
+    g.addColorStop(0, 'rgba(175, 175, 255, 0.55)');
+    g.addColorStop(1, 'rgba(128, 128, 255, 0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(22, 14);
+  return tex;
+}
+
+function createHouseFacadeTexture(baseHex, lit = false) {
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = baseHex;
+  ctx.fillRect(0, 0, 128, 128);
+  // Roof trim
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  ctx.fillRect(0, 0, 128, 8);
+  // Windows grid
+  for (let wy = 18; wy < 105; wy += 28) {
+    for (let wx = 14; wx < 110; wx += 28) {
+      ctx.fillStyle = lit ? '#fde047' : '#334155';
+      ctx.fillRect(wx, wy, 16, 20);
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(wx, wy, 16, 20);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* ============================================================================
+   4. GAME STATE & PERSISTENCE
+   ============================================================================ */
+const SAVE_KEY = 'simitci_istanbul_save_v2';
+
+const state = {
+  money: 120,
+  day: 1,
+  reputation: 4.6, // 1.0 to 5.0 (starts at 5 stars display)
+  teaLevel: 100,
+  maxTea: 100,
+  stock: {},
+  upgrades: {},
+  timeOfDay: 8.0,  // 08:00 AM bright morning start
+  dayActive: false,
+  weather: 'sunny',
+  tray: [],
+  currentCustomer: null,
+  dailyServed: 0,
+  dailyEarned: 0,
+  dailyBestTip: 0,
+  dailyGoalTarget: 8,
+  dailyGoalDone: false,
+  changeGiven: 0,
+  catVisitedToday: false,
+  gullAttackedToday: false,
+  customersSpawnedToday: 0
+};
+
+function initDefaultState() {
+  state.money = 120;
+  state.day = 1;
+  state.reputation = 4.6;
+  state.upgrades = {};
+  state.maxTea = 100;
+  state.teaLevel = 100;
+  PRODUCTS.forEach(p => {
+    state.stock[p.id] = p.isTea ? 99 : Math.floor(p.maxStock * 0.75);
+  });
+}
+
+function loadSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) { initDefaultState(); return; }
+    const data = JSON.parse(raw);
+    state.money = data.money ?? 120;
+    state.day = data.day ?? 1;
+    state.reputation = Math.max(1.0, Math.min(5.0, data.reputation ?? 4.6));
+    state.upgrades = data.upgrades || {};
+    state.maxTea = state.upgrades.samovar ? 160 : 100;
+    state.teaLevel = state.maxTea;
+    PRODUCTS.forEach(p => {
+      const bonus = state.upgrades.shelf ? 8 : 0;
+      state.stock[p.id] = data.stock?.[p.id] ?? (p.isTea ? 99 : Math.min(p.maxStock + bonus, 12));
+    });
+  } catch (e) {
+    initDefaultState();
+  }
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      money: state.money,
+      day: state.day,
+      reputation: state.reputation,
+      upgrades: state.upgrades,
+      stock: state.stock
+    }));
+  } catch (e) {}
+}
+
+loadSave();
+
+/* ============================================================================
+   5. THREE.JS SCENE, CAMERA, LIGHTING & PANORAMIC ISTANBUL WORLD
+   ============================================================================ */
+const container = document.getElementById('canvas-container');
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.18;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+// Very light, bright atmospheric haze so the distant Istanbul skyline is crisp and luminous
+scene.fog = new THREE.FogExp2(0xdbeafe, 0.0014);
+
+// Pulled back and slightly higher First-Person POV behind the red simit cart:
+// Lower half shows the cart counter & 3D products; middle shows customers; upper half shows the grand Bosphorus & Istanbul skyline!
+const camera = new THREE.PerspectiveCamera(56, window.innerWidth / window.innerHeight, 0.1, 900);
+const baseCamPos = new THREE.Vector3(0, 1.84, 1.98);
+const baseLookAt = new THREE.Vector3(0, 1.54, -6.0);
+camera.position.copy(baseCamPos);
+camera.lookAt(baseLookAt);
+
+// Small, smooth mouse look-around that settles cleanly so products never drift under cursor
+const mouseLook = { x: 0, y: 0, targetX: 0, targetY: 0, idleTimer: 0 };
+window.addEventListener('pointermove', (e) => {
+  mouseLook.targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+  mouseLook.targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+  mouseLook.idleTimer = 0;
+});
+
+// Bright, realistic Istanbul daylight
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x64748b, 1.15);
+scene.add(hemiLight);
+
+const sunLight = new THREE.DirectionalLight(0xfffbeb, 2.4);
+sunLight.position.set(45, 65, -70);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 160;
+sunLight.shadow.camera.left = -16;
+sunLight.shadow.camera.right = 16;
+sunLight.shadow.camera.top = 16;
+sunLight.shadow.camera.bottom = -16;
+sunLight.shadow.bias = -0.0005;
+scene.add(sunLight);
+
+// Warm interior cart lamp for sunset/evening
+const cartLamp = new THREE.PointLight(0xffb74d, 0.35, 6, 1.4);
+cartLamp.position.set(0, 1.68, 0.0);
+scene.add(cartLamp);
+
+// Shared Materials & Textures
+const sesameTex = createSesameTexture();
+const cobbleTex = createCobbleTexture();
+const signTex = createCartSignTexture();
+const waterNormalTex = createWaterNormalTexture();
+
+const matSimit = new THREE.MeshStandardMaterial({ map: sesameTex, roughness: 0.62, metalness: 0.05 });
+const matPastry = new THREE.MeshStandardMaterial({ color: 0xd98a2b, roughness: 0.4, metalness: 0.05 });
+const matRedCart = new THREE.MeshPhysicalMaterial({ color: 0xc62828, roughness: 0.22, metalness: 0.12, clearcoat: 0.65 });
+const matGoldTrim = new THREE.MeshStandardMaterial({ color: 0xf6c453, roughness: 0.25, metalness: 0.82 });
+const matWood = new THREE.MeshStandardMaterial({ color: 0x8d5524, roughness: 0.58 });
+const matGlass = new THREE.MeshPhysicalMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.22, roughness: 0.06, metalness: 0.08, transmission: 0.65
+});
+const matChrome = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.18, metalness: 0.9 });
+const matCopper = new THREE.MeshStandardMaterial({ color: 0xc86d51, roughness: 0.24, metalness: 0.85 });
+
+/* ============================================================================
+   6. SKY DOME, SUN, SPARKLING BOSPHORUS WATER & GRAND ISTANBUL SKYLINE
+   ============================================================================ */
+const skyGeo = new THREE.SphereGeometry(650, 32, 24);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: {
+    topColor: { value: new THREE.Color(0x1d8cf8) },
+    horizonColor: { value: new THREE.Color(0xdbeafe) },
+    bottomColor: { value: new THREE.Color(0x0284c7) }
+  },
+  vertexShader: `
+    varying vec3 vWorldPosition;
+    void main() {
+      vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+      vWorldPosition = worldPosition.xyz;
+      gl_Position = projectionMatrix * viewMatrix * worldPosition;
+    }
+  `,
+  fragmentShader: `
+    uniform vec3 topColor;
+    uniform vec3 horizonColor;
+    uniform vec3 bottomColor;
+    varying vec3 vWorldPosition;
+    void main() {
+      float h = normalize(vWorldPosition).y;
+      vec3 col = mix(horizonColor, topColor, max(pow(max(h, 0.0), 0.52), 0.0));
+      if (h < 0.0) col = mix(horizonColor, bottomColor, min(1.0, -h * 3.5));
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `
+});
+const skyDome = new THREE.Mesh(skyGeo, skyMat);
+scene.add(skyDome);
+
+// Glowing Sun Disk + Halo
+const sunGroup = new THREE.Group();
+const sunDisk = new THREE.Mesh(
+  new THREE.SphereGeometry(8.5, 24, 24),
+  new THREE.MeshBasicMaterial({ color: 0xfffbeb, fog: false })
+);
+const sunHalo = new THREE.Mesh(
+  new THREE.SphereGeometry(15, 24, 24),
+  new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.28, fog: false })
+);
+sunGroup.add(sunDisk, sunHalo);
+scene.add(sunGroup);
+
+// Fluffy Daytime Clouds high in the sky
+const cloudGroup = new THREE.Group();
+const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95, fog: false });
+for (let i = 0; i < 12; i++) {
+  const cg = new THREE.Group();
+  for (let p = 0; p < 4; p++) {
+    const puff = new THREE.Mesh(new THREE.SphereGeometry(5 + Math.random() * 4, 12, 10), cloudMat);
+    puff.scale.set(1.8, 0.65, 1.0);
+    puff.position.set((p - 1.5) * 5.5, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 3);
+    cg.add(puff);
+  }
+  cg.position.set(-180 + i * 34, 48 + (i % 3) * 10, -145 - (i % 4) * 20);
+  cloudGroup.add(cg);
+}
+scene.add(cloudGroup);
+
+// Sidewalk & Karaköy Quay Promenade
+const sidewalk = new THREE.Mesh(
+  new THREE.BoxGeometry(80, 0.6, 8.2),
+  new THREE.MeshStandardMaterial({ map: cobbleTex, roughness: 0.8 })
+);
+sidewalk.position.set(0, -0.3, -1.2);
+sidewalk.receiveShadow = true;
+scene.add(sidewalk);
+
+// Quay Stone Curb & Low Ornate Railing along the Bosphorus edge
+const curb = new THREE.Mesh(
+  new THREE.BoxGeometry(80, 0.3, 0.45),
+  new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.65 })
+);
+curb.position.set(0, 0.15, -5.2);
+curb.receiveShadow = true;
+scene.add(curb);
+
+const railingGroup = new THREE.Group();
+const railMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.35, metalness: 0.85 });
+const topBar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 76, 12), railMat);
+topBar.rotation.z = Math.PI / 2;
+topBar.position.set(0, 0.78, -5.2);
+railingGroup.add(topBar);
+for (let x = -36; x <= 36; x += 2.4) {
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.78, 10), railMat);
+  post.position.set(x, 0.39, -5.2);
+  post.castShadow = true;
+  railingGroup.add(post);
+}
+scene.add(railingGroup);
+
+// Sparkling Turquoise-Blue Bosphorus Sea Water
+const waterGeo = new THREE.PlaneGeometry(750, 160, 64, 48);
+const waterMat = new THREE.MeshPhysicalMaterial({
+  color: 0x0284c7,
+  emissive: 0x0369a1,
+  emissiveIntensity: 0.22,
+  roughness: 0.12,
+  metalness: 0.18,
+  normalMap: waterNormalTex,
+  normalScale: new THREE.Vector2(0.55, 0.55),
+  clearcoat: 1.0,
+  clearcoatRoughness: 0.08
+});
+const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+waterMesh.rotation.x = -Math.PI / 2;
+waterMesh.position.set(0, -0.35, -85);
+scene.add(waterMesh);
+
+// Sun Glitter Path on the Bosphorus
+const glitterGroup = new THREE.Group();
+const glitterMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb, transparent: true, opacity: 0.65 });
+for (let i = 0; i < 45; i++) {
+  const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.9 + Math.random() * 2.2, 0.18), glitterMat);
+  strip.rotation.x = -Math.PI / 2;
+  strip.position.set((Math.random() - 0.5) * 28, -0.31, -10 - Math.random() * 85);
+  glitterGroup.add(strip);
+}
+scene.add(glitterGroup);
+
+// Grand Istanbul Skyline (Positioned at z = -105 to -135 so it fills the upper panorama!)
+const cityGroup = new THREE.Group();
+const cityWindowMaterials = [];
+scene.add(cityGroup);
+
+function buildIstanbulBackdrop() {
+  const hillMat = new THREE.MeshStandardMaterial({ color: 0x3f6212, roughness: 0.85 });
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xe7e0d3, roughness: 0.55 });
+  const warmStoneMat = new THREE.MeshStandardMaterial({ color: 0xd6cbb9, roughness: 0.6 });
+  const leadDomeMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.35, metalness: 0.5 });
+  const seawallMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.75 });
+
+  // Distant stone seawall along the Historic Peninsula & Karaköy/Galata shore
+  const seawall = new THREE.Mesh(new THREE.BoxGeometry(360, 2.2, 4), seawallMat);
+  seawall.position.set(0, 0.5, -102);
+  cityGroup.add(seawall);
+
+  // Lush Seven Hills rising directly behind the Bosphorus / Golden Horn
+  const hillConfigs = [
+    { x: -95, y: -4, z: -128, rx: 58, ry: 20, rz: 28 },
+    { x: -32, y: -3, z: -122, rx: 56, ry: 24, rz: 28 },
+    { x: 38,  y: -3, z: -116, rx: 48, ry: 26, rz: 26 },
+    { x: 105, y: -4, z: -132, rx: 62, ry: 22, rz: 30 }
+  ];
+  hillConfigs.forEach(h => {
+    const hill = new THREE.Mesh(new THREE.SphereGeometry(1, 28, 18), hillMat);
+    hill.scale.set(h.rx, h.ry, h.rz);
+    hill.position.set(h.x, h.y, h.z);
+    cityGroup.add(hill);
+  });
+
+  // Helper to build a grand, unmistakable Ottoman Imperial Mosque (Süleymaniye / Blue Mosque)
+  function addImperialMosque(x, y, z, scale, minarets = 4) {
+    const mGroup = new THREE.Group();
+    mGroup.position.set(x, y, z);
+    mGroup.scale.setScalar(scale);
+
+    // Terraced stone courtyard & main sanctuary cube
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(22, 4, 18), warmStoneMat);
+    plinth.position.y = 2;
+    mGroup.add(plinth);
+
+    const base = new THREE.Mesh(new THREE.BoxGeometry(16, 7.5, 14), stoneMat);
+    base.position.y = 7.5;
+    mGroup.add(base);
+
+    // Cascading Semi-domes & Buttresses
+    [-6.5, 6.5].forEach(dx => {
+      const sd = new THREE.Mesh(new THREE.SphereGeometry(4.6, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), leadDomeMat);
+      sd.position.set(dx, 9.5, 0);
+      mGroup.add(sd);
+    });
+    [-4.2, 4.2].forEach(dx => {
+      [-5.2, 5.2].forEach(dz => {
+        const cupola = new THREE.Mesh(new THREE.SphereGeometry(2.1, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), leadDomeMat);
+        cupola.position.set(dx, 10.6, dz);
+        mGroup.add(cupola);
+      });
+    });
+
+    // Drum & Grand Central Dome
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(6.6, 6.8, 2.2, 24), stoneMat);
+    drum.position.y = 11.8;
+    mGroup.add(drum);
+
+    const mainDome = new THREE.Mesh(new THREE.SphereGeometry(6.6, 28, 18, 0, Math.PI * 2, 0, Math.PI / 2), leadDomeMat);
+    mainDome.position.y = 12.8;
+    mGroup.add(mainDome);
+
+    // Golden Alem (Finial)
+    const finial = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.5, 8), matGoldTrim);
+    finial.position.y = 20.4;
+    mGroup.add(finial);
+
+    // Soaring Pencil Minarets with Şerefe Balconies
+    const minCoords = [
+      [-11.5, -8.5], [11.5, -8.5], [-11.5, 8.5], [11.5, 8.5], [-6.5, -9.5], [6.5, -9.5]
+    ].slice(0, minarets);
+    minCoords.forEach(([mx, mz]) => {
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.78, 25, 14), stoneMat);
+      shaft.position.set(mx, 14.5, mz);
+      mGroup.add(shaft);
+      [15, 21.5].forEach(by => {
+        const balcony = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 0.8, 0.65, 14), stoneMat);
+        balcony.position.set(mx, by, mz);
+        mGroup.add(balcony);
+      });
+      const spire = new THREE.Mesh(new THREE.ConeGeometry(0.62, 6.2, 14), leadDomeMat);
+      spire.position.set(mx, 30.1, mz);
+      mGroup.add(spire);
+    });
+    cityGroup.add(mGroup);
+  }
+
+  // 1) Süleymaniye Mosque crowning the central-left hill (clearly visible right above the cart!)
+  addImperialMosque(-28, 13.5, -116, 1.05, 4);
+
+  // 2) Sultanahmet / Blue Mosque with 6 minarets further left on the peninsula
+  addImperialMosque(-82, 10.5, -122, 0.95, 6);
+
+  // 3) Yeni Camii (New Mosque) right by the Eminönü waterfront
+  addImperialMosque(-4, 0.8, -105, 0.68, 2);
+
+  // 4) Iconic Galata Tower rising prominently on the right-center hill
+  const galata = new THREE.Group();
+  galata.position.set(36, 14.5, -108);
+  const gBody = new THREE.Mesh(new THREE.CylinderGeometry(3.6, 4.1, 18.5, 24), warmStoneMat);
+  gBody.position.y = 9.2;
+  galata.add(gBody);
+  const gBalcony = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.2, 1.1, 24), stoneMat);
+  gBalcony.position.y = 18.2;
+  galata.add(gBalcony);
+  const gGlow = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.75, 3.75, 2.2, 20),
+    new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xffb300, emissiveIntensity: 0.15 })
+  );
+  gGlow.position.y = 16.8;
+  cityWindowMaterials.push(gGlow.material);
+  galata.add(gGlow);
+  const gCone = new THREE.Mesh(new THREE.ConeGeometry(3.9, 8.2, 24), leadDomeMat);
+  gCone.position.y = 22.8;
+  galata.add(gCone);
+  const gFinial = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.2, 8), matGoldTrim);
+  gFinial.position.y = 27.6;
+  galata.add(gFinial);
+  cityGroup.add(galata);
+
+  // 5) Bosphorus Bridge spanning the far right strait
+  const bridgeGroup = new THREE.Group();
+  bridgeGroup.position.set(102, 0, -135);
+  const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, emissive: 0xff3d00, emissiveIntensity: 0.0 });
+  cityWindowMaterials.push(bridgeMat);
+  [-32, 32].forEach(px => {
+    const towerL = new THREE.Mesh(new THREE.BoxGeometry(1.4, 34, 1.4), bridgeMat);
+    towerL.position.set(px, 17, -3);
+    const towerR = new THREE.Mesh(new THREE.BoxGeometry(1.4, 34, 1.4), bridgeMat);
+    towerR.position.set(px, 17, 3);
+    const cross1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 6.2), bridgeMat);
+    cross1.position.set(px, 22, 0);
+    const cross2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.0, 6.2), bridgeMat);
+    cross2.position.set(px, 31, 0);
+    bridgeGroup.add(towerL, towerR, cross1, cross2);
+  });
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(96, 1.1, 5.5), bridgeMat);
+  deck.position.set(0, 12, 0);
+  bridgeGroup.add(deck);
+  cityGroup.add(bridgeGroup);
+
+  // 6) Dense, colorful Istanbul Hillside Houses cascading down to the water
+  const facadeHexes = ['#f5ebe0', '#e3d5ca', '#fde68a', '#fed7aa', '#fca5a5', '#cbd5e1'];
+  const facadeMats = facadeHexes.map(hex => {
+    const m = new THREE.MeshStandardMaterial({
+      map: createHouseFacadeTexture(hex, true),
+      emissive: 0xffb703,
+      emissiveIntensity: 0.0,
+      roughness: 0.75
+    });
+    cityWindowMaterials.push(m);
+    return m;
+  });
+  const terracottaRoofMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.75 });
+
+  for (let i = 0; i < 210; i++) {
+    const hx = -125 + (i * 1.22) + (Math.random() - 0.5) * 4;
+    const row = i % 4;
+    const hz = -104 - row * 6 - Math.random() * 5;
+    // Follow hill contours
+    let hillHeight = 1.5 + row * 2.8;
+    if (Math.abs(hx + 28) < 35) hillHeight += (1 - Math.abs(hx + 28) / 35) * 6.5;
+    if (Math.abs(hx - 36) < 30) hillHeight += (1 - Math.abs(hx - 36) / 30) * 7.5;
+
+    const w = 2.2 + Math.random() * 2.4;
+    const h = 2.6 + Math.random() * 3.2;
+    const d = 2.2 + Math.random() * 2.2;
+
+    const houseMat = facadeMats[i % facadeMats.length];
+    const house = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), houseMat);
+    house.position.set(hx, hillHeight, hz);
+    cityGroup.add(house);
+
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(w * 0.76, 1.25, 4), terracottaRoofMat);
+    roof.rotation.y = Math.PI / 4;
+    roof.position.set(hx, hillHeight + h * 0.5 + 0.6, hz);
+    cityGroup.add(roof);
+  }
+}
+buildIstanbulBackdrop();
+
+/* ============================================================================
+   7. MOVING BOSPHORUS FERRIES (ŞEHİR HATLARI VAPURU) & SMALL BOATS
+   ============================================================================ */
+const boats = [];
+function buildBosphorusFerry() {
+  const g = new THREE.Group();
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 });
+  const darkHullMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.45 });
+  const yellowFunnelMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.35 });
+  const cabinWinMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0xfef08a, emissiveIntensity: 0.15 });
+  cityWindowMaterials.push(cabinWinMat);
+
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(20, 2.0, 4.8), darkHullMat);
+  hull.position.y = 0.6;
+  g.add(hull);
+
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(20.2, 0.38, 4.9), new THREE.MeshStandardMaterial({ color: 0x16a34a }));
+  stripe.position.y = 1.35;
+  g.add(stripe);
+
+  const deck1 = new THREE.Mesh(new THREE.BoxGeometry(16.5, 1.8, 4.3), whiteMat);
+  deck1.position.y = 2.4;
+  g.add(deck1);
+
+  const win1 = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.8, 4.4), cabinWinMat);
+  win1.position.y = 2.5;
+  g.add(win1);
+
+  const deck2 = new THREE.Mesh(new THREE.BoxGeometry(12, 1.5, 3.8), whiteMat);
+  deck2.position.y = 3.95;
+  g.add(deck2);
+
+  const win2 = new THREE.Mesh(new THREE.BoxGeometry(10.5, 0.7, 3.9), cabinWinMat);
+  win2.position.y = 3.95;
+  g.add(win2);
+
+  const funnel = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.85, 3.2, 16), yellowFunnelMat);
+  funnel.position.set(0, 5.9, 0);
+  g.add(funnel);
+
+  const funnelTop = new THREE.Mesh(new THREE.CylinderGeometry(0.77, 0.77, 0.65, 16), darkHullMat);
+  funnelTop.position.set(0, 7.3, 0);
+  g.add(funnelTop);
+
+  // White foam wake behind ferry
+  const wake = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, 3.4),
+    new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.45 })
+  );
+  wake.rotation.x = -Math.PI / 2;
+  wake.position.set(-13, 0.08, 0);
+  g.add(wake);
+
+  return g;
+}
+
+function buildSmallMotorBoat() {
+  const g = new THREE.Group();
+  const hull = new THREE.Mesh(
+    new THREE.BoxGeometry(6.0, 1.0, 2.1),
+    new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.45 })
+  );
+  hull.position.y = 0.3;
+  g.add(hull);
+  const cabin = new THREE.Mesh(
+    new THREE.BoxGeometry(2.6, 1.1, 1.6),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 })
+  );
+  cabin.position.set(-0.4, 1.2, 0);
+  g.add(cabin);
+  return g;
+}
+
+for (let i = 0; i < 3; i++) {
+  const ferry = buildBosphorusFerry();
+  const dir = i % 2 === 0 ? 1 : -1;
+  ferry.position.set((i - 1) * 42, -0.35, -26 - i * 20);
+  if (dir < 0) ferry.rotation.y = Math.PI;
+  scene.add(ferry);
+  boats.push({ mesh: ferry, speed: (3.4 + i * 0.6) * dir, baseZ: ferry.position.z, phase: i * 1.7 });
+}
+for (let i = 0; i < 3; i++) {
+  const boat = buildSmallMotorBoat();
+  const dir = i % 2 === 0 ? -1 : 1;
+  boat.position.set((i - 1) * 28, -0.35, -14 - i * 14);
+  if (dir < 0) boat.rotation.y = Math.PI;
+  scene.add(boat);
+  boats.push({ mesh: boat, speed: (5.0 + i * 0.8) * dir, baseZ: boat.position.z, phase: i * 2.3 });
+}
+
+/* ============================================================================
+   8. CLASSIC RED ISTANBUL SIMIT CART ("SİMİT ARABASI") & 3D PRODUCTS
+   ============================================================================ */
+const cartGroup = new THREE.Group();
+cartGroup.position.set(0, 0, 0);
+scene.add(cartGroup);
+
+const clickableProducts = [];
+const productVisualPools = {};
+PRODUCTS.forEach(p => productVisualPools[p.id] = []);
+
+let umbrellaGroup = null;
+let radioMesh = null;
+let samovarGroup = null;
+
+function buildSimitCart() {
+  // Lower Red Body
+  const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(2.25, 0.82, 0.95), matRedCart);
+  lowerBody.position.set(0, 0.50, 0);
+  lowerBody.castShadow = true;
+  lowerBody.receiveShadow = true;
+  cartGroup.add(lowerBody);
+
+  // Decorative Gold Trim Panel on front & sides
+  const frontGoldFrame = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.58, 0.97), matGoldTrim);
+  frontGoldFrame.position.set(0, 0.50, 0);
+  cartGroup.add(frontGoldFrame);
+
+  // Classic Red-and-Gold Signboard Mounted on the Lower Front Body (Never blocks the Bosphorus view!)
+  const signBoard = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.92, 0.42),
+    new THREE.MeshStandardMaterial({ map: signTex, roughness: 0.35 })
+  );
+  signBoard.position.set(0, 0.50, -0.49);
+  signBoard.rotation.y = Math.PI;
+  cartGroup.add(signBoard);
+
+  // Wooden Countertop
+  const counterTop = new THREE.Mesh(new THREE.BoxGeometry(2.42, 0.06, 1.08), matWood);
+  counterTop.position.set(0, 0.94, 0);
+  counterTop.receiveShadow = true;
+  cartGroup.add(counterTop);
+
+  // Spoked Cart Wheels on left & right
+  [-0.95, 0.95].forEach(wx => {
+    const wheelGroup = new THREE.Group();
+    wheelGroup.position.set(wx, 0.34, 0.51);
+    const tire = new THREE.Mesh(
+      new THREE.TorusGeometry(0.32, 0.035, 12, 28),
+      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.8 })
+    );
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.018, 8, 24), matGoldTrim);
+    wheelGroup.add(tire, rim);
+    for (let s = 0; s < 6; s++) {
+      const spoke = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.56, 6), matGoldTrim);
+      spoke.rotation.z = (s * Math.PI) / 6;
+      wheelGroup.add(spoke);
+    }
+    cartGroup.add(wheelGroup);
+  });
+
+  // Push Handles on player side (+Z)
+  [-0.85, 0.85].forEach(hx => {
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.30, 10), matGoldTrim);
+    bar.rotation.x = Math.PI / 2;
+    bar.position.set(hx, 0.92, 0.62);
+    cartGroup.add(bar);
+  });
+  const handleGrip = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.024, 1.75, 12), matWood);
+  handleGrip.rotation.z = Math.PI / 2;
+  handleGrip.position.set(0, 0.92, 0.76);
+  cartGroup.add(handleGrip);
+
+  // Sleek Low-Profile Glass Display Case (Keeps upper half of screen wide open for customers & Istanbul skyline!)
+  const pillarPositions = [
+    [-1.08, -0.45], [1.08, -0.45],
+    [-1.08,  0.45], [1.08,  0.45],
+    [-0.35, -0.45], [0.35, -0.45]
+  ];
+  pillarPositions.forEach(([px, pz]) => {
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.52, 0.032), matGoldTrim);
+    post.position.set(px, 1.23, pz);
+    cartGroup.add(post);
+  });
+
+  // Middle Glass Shelf inside the display case
+  const midShelf = new THREE.Mesh(new THREE.BoxGeometry(2.12, 0.018, 0.84), matGlass);
+  midShelf.position.set(0, 1.24, 0);
+  cartGroup.add(midShelf);
+
+  // Top Thin Brass Frame Rim around the glass showcase (open air above y = 1.50)
+  const topRimFront = new THREE.Mesh(new THREE.BoxGeometry(2.20, 0.035, 0.035), matGoldTrim);
+  topRimFront.position.set(0, 1.50, -0.45);
+  const topRimBack = new THREE.Mesh(new THREE.BoxGeometry(2.20, 0.035, 0.035), matGoldTrim);
+  topRimBack.position.set(0, 1.50, 0.45);
+  cartGroup.add(topRimFront, topRimBack);
+  [-1.08, 1.08].forEach(sx => {
+    const sideRim = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.035, 0.92), matGoldTrim);
+    sideRim.position.set(sx, 1.50, 0);
+    cartGroup.add(sideRim);
+  });
+
+  // Front & Side Clear Glass Panes
+  const frontGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.14, 0.50), matGlass);
+  frontGlass.position.set(0, 1.23, -0.45);
+  cartGroup.add(frontGlass);
+
+  [-1.08, 1.08].forEach(sx => {
+    const sideGlass = new THREE.Mesh(new THREE.PlaneGeometry(0.88, 0.50), matGlass);
+    sideGlass.rotation.y = Math.PI / 2;
+    sideGlass.position.set(sx, 1.23, 0);
+    cartGroup.add(sideGlass);
+  });
+
+  // Order Serving Tray (Kese Kağıdı & Metal Tepsi)
+  const trayMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 0.025, 24), matChrome);
+  trayMesh.position.set(0, 0.99, 0.32);
+  cartGroup.add(trayMesh);
+
+  // Upgradeable Side Umbrella (High and angled to the left so it frames the view without blocking the skyline)
+  umbrellaGroup = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 2.2, 10), matChrome);
+  pole.position.set(-1.25, 1.95, -0.15);
+  umbrellaGroup.add(pole);
+  const canopy = new THREE.Mesh(
+    new THREE.ConeGeometry(1.35, 0.42, 16),
+    new THREE.MeshStandardMaterial({ color: 0xb71c1c, roughness: 0.55 })
+  );
+  canopy.position.set(-1.15, 3.05, -0.15);
+  canopy.rotation.z = -0.15;
+  umbrellaGroup.add(canopy);
+  umbrellaGroup.visible = !!state.upgrades.umbrella;
+  cartGroup.add(umbrellaGroup);
+
+  // Vintage Radio on right corner of counter
+  radioMesh = new THREE.Group();
+  radioMesh.position.set(0.98, 1.04, 0.32);
+  const rBox = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.14, 0.12), matWood);
+  const rGrill = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.08), matGoldTrim);
+  rGrill.position.set(0, 0, 0.062);
+  const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.26, 6), matChrome);
+  antenna.position.set(0.08, 0.17, 0);
+  antenna.rotation.z = -0.25;
+  radioMesh.add(rBox, rGrill, antenna);
+  cartGroup.add(radioMesh);
+}
+buildSimitCart();
+
+/* ============================================================================
+   9. PROCEDURAL 3D FOOD & DRINK MODELS ON THE STAND
+   ============================================================================ */
+function registerClickable(mesh, productId) {
+  mesh.userData.productId = productId;
+  mesh.traverse(child => {
+    if (child.isMesh) {
+      child.userData.productId = productId;
+      clickableProducts.push(child);
+    }
+  });
+}
+
+function createSimitMesh() {
+  const mesh = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.028, 14, 28), matSimit);
+  mesh.rotation.x = Math.PI / 2;
+  mesh.castShadow = true;
+  return mesh;
+}
+
+function createTeaGlassMesh() {
+  const g = new THREE.Group();
+  const saucer = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.062, 0.042, 0.012, 18),
+    new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 })
+  );
+  const saucerRim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.055, 0.004, 8, 20),
+    new THREE.MeshStandardMaterial({ color: 0xd32f2f })
+  );
+  saucerRim.rotation.x = Math.PI / 2;
+  saucerRim.position.y = 0.007;
+  g.add(saucer, saucerRim);
+
+  const points = [
+    new THREE.Vector2(0.001, 0.01),
+    new THREE.Vector2(0.030, 0.01),
+    new THREE.Vector2(0.036, 0.035),
+    new THREE.Vector2(0.023, 0.065),
+    new THREE.Vector2(0.038, 0.105),
+    new THREE.Vector2(0.036, 0.105)
+  ];
+  const tulipGlass = new THREE.Mesh(
+    new THREE.LatheGeometry(points, 18),
+    new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.38, roughness: 0.05 })
+  );
+  const teaLiquid = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.031, 0.026, 0.075, 16),
+    new THREE.MeshPhysicalMaterial({ color: 0x7f1d1d, emissive: 0x450a0a, roughness: 0.15, transparent: true, opacity: 0.88 })
+  );
+  teaLiquid.position.y = 0.05;
+  g.add(tulipGlass, teaLiquid);
+  return g;
+}
+
+function populateStandProducts() {
+  // 1. SİMİT (Stacked on wooden dowels on lower shelf left)
+  [-0.78, -0.52].forEach(dx => {
+    const dowel = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.44, 10), matWood);
+    dowel.position.set(dx, 1.18, -0.12);
+    cartGroup.add(dowel);
+  });
+  for (let i = 0; i < 20; i++) {
+    const s = createSimitMesh();
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    s.position.set(col === 0 ? -0.78 : -0.52, 0.99 + row * 0.044, -0.12 + (Math.random() - 0.5) * 0.015);
+    s.rotation.z = Math.random() * Math.PI;
+    cartGroup.add(s);
+    registerClickable(s, 'simit');
+    productVisualPools.simit.push(s);
+  }
+
+  // 2. ÇAY & ÇAYDANLIK (Double Teapot Samovar on right side + Tulip glasses)
+  samovarGroup = new THREE.Group();
+  samovarGroup.position.set(0.78, 0.98, -0.12);
+  const bottomPot = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.26, 20), matCopper);
+  bottomPot.position.y = 0.13;
+  const topPot = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), matChrome);
+  topPot.position.y = 0.34;
+  const lid = new THREE.Mesh(new THREE.ConeGeometry(0.058, 0.045, 14), matGoldTrim);
+  lid.position.y = 0.44;
+  const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.15, 10), matChrome);
+  spout.position.set(-0.11, 0.34, 0);
+  spout.rotation.z = 0.7;
+  samovarGroup.add(bottomPot, topPot, lid, spout);
+  cartGroup.add(samovarGroup);
+  registerClickable(samovarGroup, 'cay');
+
+  for (let i = 0; i < 6; i++) {
+    const glass = createTeaGlassMesh();
+    glass.position.set(0.48 + (i % 3) * 0.13, 0.98, 0.16 + Math.floor(i / 3) * 0.13);
+    cartGroup.add(glass);
+    registerClickable(glass, 'cay');
+    productVisualPools.cay.push(glass);
+  }
+
+  // 3. POĞAÇA
+  for (let i = 0; i < 14; i++) {
+    const pog = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 12), matPastry);
+    pog.scale.set(1.25, 0.62, 0.9);
+    pog.position.set(-0.24 + (i % 3) * 0.11, 0.99 + Math.floor(i / 6) * 0.042, -0.22 + (Math.floor(i / 3) % 2) * 0.12);
+    cartGroup.add(pog);
+    registerClickable(pog, 'pogaca');
+    productVisualPools.pogaca.push(pog);
+  }
+
+  // 4. AÇMA
+  const matAcma = new THREE.MeshPhysicalMaterial({ color: 0xc87d28, roughness: 0.25, clearcoat: 0.45 });
+  for (let i = 0; i < 14; i++) {
+    const acma = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.024, 12, 20), matAcma);
+    acma.rotation.x = Math.PI / 2;
+    acma.position.set(0.14 + (i % 3) * 0.12, 0.99 + Math.floor(i / 6) * 0.042, -0.22 + (Math.floor(i / 3) % 2) * 0.13);
+    cartGroup.add(acma);
+    registerClickable(acma, 'acma');
+    productVisualPools.acma.push(acma);
+  }
+
+  // 5. KAŞARLI SİMİT (Middle shelf left)
+  const matCheese = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.35 });
+  for (let i = 0; i < 12; i++) {
+    const ksGroup = new THREE.Group();
+    const s = createSimitMesh();
+    const cheese = new THREE.Mesh(new THREE.CylinderGeometry(0.092, 0.092, 0.012, 16), matCheese);
+    ksGroup.add(s, cheese);
+    ksGroup.position.set(-0.78 + (i % 3) * 0.18, 1.27 + Math.floor(i / 6) * 0.05, -0.18 + (Math.floor(i / 3) % 2) * 0.22);
+    cartGroup.add(ksGroup);
+    registerClickable(ksGroup, 'kasarli');
+    productVisualPools.kasarli.push(ksGroup);
+  }
+
+  // 6. SOĞUK SU (Middle shelf right)
+  const matWaterBottle = new THREE.MeshPhysicalMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.72, roughness: 0.1 });
+  const matCap = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
+  for (let i = 0; i < 18; i++) {
+    const bGroup = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.13, 12), matWaterBottle);
+    body.position.y = 0.065;
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.022, 10), matCap);
+    cap.position.y = 0.14;
+    bGroup.add(body, cap);
+    bGroup.position.set(0.52 + (i % 6) * 0.085, 1.25, -0.24 + Math.floor(i / 6) * 0.11);
+    cartGroup.add(bGroup);
+    registerClickable(bGroup, 'su');
+    productVisualPools.su.push(bGroup);
+  }
+
+  // 7. AYRAN
+  const matAyranCup = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+  const matAyranFoil = new THREE.MeshStandardMaterial({ color: 0x0d9488, metalness: 0.5, roughness: 0.2 });
+  for (let i = 0; i < 15; i++) {
+    const aGroup = new THREE.Group();
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.038, 0.028, 0.095, 14), matAyranCup);
+    cup.position.y = 0.048;
+    const foil = new THREE.Mesh(new THREE.CylinderGeometry(0.040, 0.040, 0.005, 14), matAyranFoil);
+    foil.position.y = 0.098;
+    aGroup.add(cup, foil);
+    aGroup.position.set(0.06 + (i % 5) * 0.085, 1.25, -0.22 + Math.floor(i / 5) * 0.11);
+    cartGroup.add(aGroup);
+    registerClickable(aGroup, 'ayran');
+    productVisualPools.ayran.push(aGroup);
+  }
+
+  // 8. KREM PEYNİR
+  const matPeynir = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.6, roughness: 0.25 });
+  for (let i = 0; i < 16; i++) {
+    const pMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.022, 3), matPeynir);
+    pMesh.position.set(-0.28 + (i % 4) * 0.075, 1.26 + Math.floor(i / 8) * 0.025, -0.22 + (Math.floor(i / 4) % 2) * 0.09);
+    cartGroup.add(pMesh);
+    registerClickable(pMesh, 'peynir');
+    productVisualPools.peynir.push(pMesh);
+  }
+
+  // 9. NUTELLA / ÇİKOLATA
+  const matChoco = new THREE.MeshStandardMaterial({ color: 0x3e2723, roughness: 0.3 });
+  const matChocoLid = new THREE.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.4 });
+  for (let i = 0; i < 16; i++) {
+    const nGroup = new THREE.Group();
+    const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.026, 0.045, 12), matChoco);
+    jar.position.y = 0.022;
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.030, 0.030, 0.012, 12), matChocoLid);
+    lid.position.y = 0.048;
+    nGroup.add(jar, lid);
+    nGroup.position.set(-0.28 + (i % 4) * 0.075, 1.25, 0.04 + Math.floor(i / 4) * 0.075);
+    cartGroup.add(nGroup);
+    registerClickable(nGroup, 'nutella');
+    productVisualPools.nutella.push(nGroup);
+  }
+}
+populateStandProducts();
+
+function sync3DStockVisibility() {
+  PRODUCTS.forEach(p => {
+    if (p.isTea) return;
+    const pool = productVisualPools[p.id] || [];
+    const count = state.stock[p.id] || 0;
+    pool.forEach((mesh, idx) => {
+      mesh.visible = idx < count;
+    });
+  });
+}
+
+/* ============================================================================
+   10. REALISTIC ARTICULATED 3D HUMANS, STREET CAT TEKİR & SEAGULLS
+   ============================================================================ */
+const activeCustomerGroup = new THREE.Group();
+scene.add(activeCustomerGroup);
+
+const servingTray3DGroup = new THREE.Group();
+servingTray3DGroup.position.set(0, 1.01, 0.32);
+cartGroup.add(servingTray3DGroup);
+
+function animateCharacterWalk(charRoot, phase, isWalking, dt) {
+  const limbs = charRoot.userData.limbs;
+  if (!limbs) return;
+  if (isWalking) {
+    const swing = Math.sin(phase) * 0.55;
+    limbs.legL.rotation.x = swing;
+    limbs.legR.rotation.x = -swing;
+    limbs.armL.rotation.x = -swing * 0.75;
+    limbs.armR.rotation.x = swing * 0.75;
+    if (limbs.headGroup) {
+      limbs.headGroup.rotation.y = Math.sin(phase * 0.5) * 0.06;
+      limbs.headGroup.rotation.z = Math.cos(phase) * 0.025;
+    }
+  } else {
+    // Smoothly settle limbs when standing at the counter
+    const damp = Math.min(1, dt * 10);
+    limbs.legL.rotation.x = THREE.MathUtils.lerp(limbs.legL.rotation.x, 0, damp);
+    limbs.legR.rotation.x = THREE.MathUtils.lerp(limbs.legR.rotation.x, 0, damp);
+    limbs.armL.rotation.x = THREE.MathUtils.lerp(limbs.armL.rotation.x, -0.12, damp);
+    limbs.armR.rotation.x = THREE.MathUtils.lerp(limbs.armR.rotation.x, -0.12, damp);
+    if (limbs.headGroup) {
+      limbs.headGroup.rotation.y = Math.sin(phase * 0.35) * 0.08;
+      limbs.headGroup.rotation.z = 0;
+    }
+  }
+}
+
+function buildCustomerMesh(custType) {
+  const g = new THREE.Group();
+
+  if (custType.isCat) {
+    // Detailed Istanbul Tabby Cat (Tekir) perched on the front counter ledge
+    const furMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.75 });
+    const stripeMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 });
+    const whiteFur = new THREE.MeshStandardMaterial({ color: 0xfef3c7, roughness: 0.75 });
+    const greenEye = new THREE.MeshBasicMaterial({ color: 0x4ade80 });
+
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.11, 0.28, 10, 14), furMat);
+    body.rotation.x = Math.PI / 2 - 0.25;
+    body.position.set(0, 1.02, 0);
+
+    const chest = new THREE.Mesh(new THREE.SphereGeometry(0.105, 12, 12), whiteFur);
+    chest.position.set(0, 1.03, 0.14);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.135, 18, 16), furMat);
+    head.position.set(0, 1.22, 0.18);
+
+    const snout = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), whiteFur);
+    snout.position.set(0, 1.19, 0.30);
+
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), new THREE.MeshBasicMaterial({ color: 0xf43f5e }));
+    nose.position.set(0, 1.21, 0.35);
+
+    [-0.05, 0.05].forEach(ex => {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), greenEye);
+      eye.position.set(ex, 1.24, 0.295);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 8, 8), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+      pupil.position.set(ex, 1.24, 0.312);
+      g.add(eye, pupil);
+    });
+
+    [-0.08, 0.08].forEach(ex => {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.11, 4), stripeMat);
+      ear.position.set(ex, 1.36, 0.16);
+      ear.rotation.z = ex > 0 ? -0.15 : 0.15;
+      g.add(ear);
+    });
+
+    [-0.06, 0.06].forEach(px => {
+      const paw = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.028, 0.22, 10), whiteFur);
+      paw.position.set(px, 0.94, 0.16);
+      g.add(paw);
+    });
+
+    const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.32, 8, 10), stripeMat);
+    tail.position.set(0, 1.14, -0.24);
+    tail.rotation.x = -0.55;
+    g.add(body, chest, head, snout, nose, tail);
+    return g;
+  }
+
+  // Articulated, Proportioned Human Character
+  const heightProfiles = {
+    child: 0.72,
+    teyze: 0.91,
+    amca: 0.95,
+    student: 0.98,
+    tourist: 1.02,
+    office: 1.03,
+    fisherman: 1.04,
+    taxidriver: 1.0
+  };
+  const scaleH = (heightProfiles[custType.type] || 1.0) * (0.97 + Math.random() * 0.06);
+  const bodyWidth = (custType.type === 'teyze' || custType.type === 'taxidriver' || custType.type === 'fisherman')
+    ? 1.14
+    : (custType.type === 'student' ? 0.93 : 1.0);
+  g.scale.set(scaleH * bodyWidth, scaleH, scaleH * bodyWidth);
+
+  const skinTones = [0xf5d0b5, 0xeebfb0, 0xe2a98b, 0xfbe2c8];
+  const coatColors = {
+    office: [0x1e293b, 0x334155, 0x0f172a, 0x1e3a8a],
+    student: [0xdc2626, 0x2563eb, 0x16a34a, 0x7c3aed, 0xea580c],
+    tourist: [0xf59e0b, 0x06b6d4, 0xec4899, 0x10b981],
+    teyze: [0x6b21a8, 0x831843, 0x115e59, 0x7c2d12],
+    amca: [0x57534e, 0x44403c, 0x3f6212, 0x374151],
+    child: [0xef4444, 0x3b82f6, 0xeab308, 0x22c55e],
+    fisherman: [0x0369a1, 0xeab308, 0x0f766e],
+    taxidriver: [0x1d4ed8, 0x1f2937, 0x374151]
+  };
+  const trouserColors = [0x1e293b, 0x334155, 0x475569, 0x27272a, 0x1e3a8a];
+  const hairColors = [0x1c1917, 0x3e2723, 0x5d4037, 0x78350f, 0x9ca3af];
+
+  const palette = coatColors[custType.type] || [0x475569];
+  const shirtColor = palette[Math.floor(Math.random() * palette.length)];
+  const pantsColor = trouserColors[Math.floor(Math.random() * trouserColors.length)];
+  const skinColor = skinTones[Math.floor(Math.random() * skinTones.length)];
+  const hairColor = custType.type === 'amca' ? 0xd1d5db : hairColors[Math.floor(Math.random() * (hairColors.length - 1))];
+
+  const skinMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.55 });
+  const clothMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.72 });
+  const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor, roughness: 0.8 });
+  const shoeMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6 });
+  const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.82 });
+
+  // Pelvis / Hips
+  const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(0.155, 0.10, 8, 14), custType.type === 'teyze' ? clothMat : pantsMat);
+  pelvis.position.y = 0.76;
+  g.add(pelvis);
+
+  // Articulated Legs with Shoes (Pivot at hip y = 0.74)
+  function createLeg(xOffset) {
+    const legPivot = new THREE.Group();
+    legPivot.position.set(xOffset, 0.74, 0);
+    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.068, 0.48, 8, 12), pantsMat);
+    thigh.position.y = -0.32;
+    thigh.castShadow = true;
+    const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.21), shoeMat);
+    shoe.position.set(0, -0.68, 0.04);
+    legPivot.add(thigh, shoe);
+    return legPivot;
+  }
+  const legL = createLeg(-0.105);
+  const legR = createLeg(0.105);
+  g.add(legL, legR);
+
+  // Long Coat / Skirt for Teyze
+  if (custType.type === 'teyze') {
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 0.55, 16), clothMat);
+    skirt.position.y = 0.52;
+    g.add(skirt);
+  }
+
+  // Sculpted Torso, Collar & Neck
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(0.18, 0.36, 10, 16), clothMat);
+  torso.scale.set(1.12, 1.0, 0.78);
+  torso.position.y = 1.08;
+  torso.castShadow = true;
+  g.add(torso);
+
+  const collar = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.11, 0.13, 0.08, 14),
+    new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5 })
+  );
+  collar.position.y = 1.35;
+  g.add(collar);
+
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.07, 0.11, 12), skinMat);
+  neck.position.y = 1.42;
+  g.add(neck);
+
+  // Articulated Arms with Hands (Pivot at shoulder y = 1.30)
+  function createArm(xOffset) {
+    const armPivot = new THREE.Group();
+    armPivot.position.set(xOffset, 1.30, 0);
+    const sleeve = new THREE.Mesh(new THREE.CapsuleGeometry(0.055, 0.38, 8, 12), clothMat);
+    sleeve.position.y = -0.22;
+    sleeve.castShadow = true;
+    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), skinMat);
+    hand.position.set(0, -0.45, 0.02);
+    armPivot.add(sleeve, hand);
+    return armPivot;
+  }
+  const armL = createArm(-0.245);
+  const armR = createArm(0.245);
+  g.add(armL, armR);
+
+  // Rounded Head Group with Facial Features (Nose, Ears, Eyes, Eyebrows, Mouth, Hair)
+  const headGroup = new THREE.Group();
+  headGroup.position.set(0, 1.60, 0);
+  g.add(headGroup);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.165, 22, 20), skinMat);
+  head.scale.set(0.95, 1.06, 0.98);
+  head.castShadow = true;
+  headGroup.add(head);
+
+  // Ears
+  [-0.155, 0.155].forEach(ex => {
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(0.034, 10, 10), skinMat);
+    ear.scale.set(0.5, 1.1, 0.8);
+    ear.position.set(ex, 0.0, 0);
+    headGroup.add(ear);
+  });
+
+  // Nose
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.065, 10), skinMat);
+  nose.rotation.x = Math.PI / 2 - 0.15;
+  nose.position.set(0, -0.01, 0.172);
+  headGroup.add(nose);
+
+  // Eyes (Whites + Pupils) & Eyebrows
+  const scleraMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111827 });
+  [-0.058, 0.058].forEach(ex => {
+    const sclera = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 10), scleraMat);
+    sclera.scale.set(1.1, 0.85, 0.6);
+    sclera.position.set(ex, 0.032, 0.148);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.013, 8, 8), pupilMat);
+    pupil.position.set(ex, 0.032, 0.161);
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.044, 0.011, 0.012), hairMat);
+    brow.position.set(ex, 0.068, 0.154);
+    headGroup.add(sclera, pupil, brow);
+  });
+
+  // Warm Mouth / Smile
+  const mouth = new THREE.Mesh(
+    new THREE.BoxGeometry(0.052, 0.012, 0.01),
+    new THREE.MeshBasicMaterial({ color: 0x991b1b })
+  );
+  mouth.position.set(0, -0.068, 0.155);
+  headGroup.add(mouth);
+
+  // Character-Specific Hair, Headwear & Bags/Accessories
+  if (custType.type === 'teyze') {
+    // Floral/Colorful Headscarf wrapping head and neck + market tote bag on arm
+    const scarfMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.65 });
+    const scarfHead = new THREE.Mesh(new THREE.SphereGeometry(0.176, 18, 16), scarfMat);
+    scarfHead.scale.set(0.98, 1.07, 1.02);
+    scarfHead.position.set(0, 0.01, -0.015);
+    const scarfNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.14, 14), scarfMat);
+    scarfNeck.position.set(0, -0.14, 0);
+    headGroup.add(scarfHead, scarfNeck);
+
+    // Market Tote Bag (Pazar Çantası) hanging from right arm
+    const bag = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.26, 0.22),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.7 })
+    );
+    bag.position.set(0.05, -0.46, 0.02);
+    armR.add(bag);
+
+  } else if (custType.type === 'amca') {
+    // Classic Turkish Flat Cap (Kasket), Grey Mustache & Folded Newspaper
+    const capMat = new THREE.MeshStandardMaterial({ color: 0x374151, roughness: 0.75 });
+    const capCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.165, 0.165, 0.075, 16), capMat);
+    capCrown.position.set(0, 0.135, 0);
+    const capVisor = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.018, 14), capMat);
+    capVisor.position.set(0, 0.105, 0.075);
+    const mustache = new THREE.Mesh(new THREE.CapsuleGeometry(0.016, 0.065, 6, 8), hairMat);
+    mustache.rotation.z = Math.PI / 2;
+    mustache.position.set(0, -0.042, 0.165);
+    headGroup.add(capCrown, capVisor, mustache);
+
+  } else if (custType.type === 'taxidriver') {
+    // Cap with visor, mustache & open jacket vest
+    const capMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.6 });
+    const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.168, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat);
+    capCrown.position.set(0, 0.05, 0);
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.015, 0.14), capMat);
+    visor.position.set(0, 0.095, 0.13);
+    const mustache = new THREE.Mesh(new THREE.CapsuleGeometry(0.015, 0.06, 6, 8), hairMat);
+    mustache.rotation.z = Math.PI / 2;
+    mustache.position.set(0, -0.042, 0.165);
+    headGroup.add(capCrown, visor, mustache);
+
+  } else if (custType.type === 'tourist') {
+    // Sun Hat, Sunglasses, DSLR Camera on chest & Backpack
+    const hatMat = new THREE.MeshStandardMaterial({ color: 0xfde68a, roughness: 0.65 });
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.018, 20), hatMat);
+    brim.position.set(0, 0.12, 0);
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.155, 0.165, 0.10, 18), hatMat);
+    crown.position.set(0, 0.17, 0);
+    // Sunglasses
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.2 });
+    const shades = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.042, 0.02), glassMat);
+    shades.position.set(0, 0.035, 0.162);
+    headGroup.add(brim, crown, shades);
+
+    // Camera on chest
+    const camBody = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.08, 0.06), shoeMat);
+    camBody.position.set(0, 1.12, 0.17);
+    const camLens = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.05, 12), matChrome);
+    camLens.rotation.x = Math.PI / 2;
+    camLens.position.set(0, 1.12, 0.21);
+    g.add(camBody, camLens);
+
+  } else if (custType.type === 'student' || custType.type === 'child') {
+    // Full sculpted hair + Colorful School Backpack + Shoulder Straps
+    const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.172, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.58), hairMat);
+    hairCap.position.set(0, 0.02, -0.01);
+    const fringe = new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.14, 8, 10), hairMat);
+    fringe.rotation.z = Math.PI / 2;
+    fringe.position.set(0, 0.11, 0.125);
+    headGroup.add(hairCap, fringe);
+
+    const packMat = new THREE.MeshStandardMaterial({ color: custType.type === 'child' ? 0xf97316 : 0x1e40af, roughness: 0.65 });
+    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.34, 0.15), packMat);
+    backpack.position.set(0, 1.12, -0.18);
+    g.add(backpack);
+
+  } else if (custType.type === 'fisherman') {
+    // Knit Fisherman Beanie (Bere) & Beard
+    const beanieMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.85 });
+    const beanie = new THREE.Mesh(new THREE.SphereGeometry(0.172, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), beanieMat);
+    beanie.position.set(0, 0.04, 0);
+    const cuff = new THREE.Mesh(new THREE.TorusGeometry(0.158, 0.026, 10, 20), beanieMat);
+    cuff.rotation.x = Math.PI / 2;
+    cuff.position.set(0, 0.09, 0);
+    const beard = new THREE.Mesh(new THREE.SphereGeometry(0.145, 14, 12), hairMat);
+    beard.scale.set(0.95, 0.75, 0.85);
+    beard.position.set(0, -0.06, 0.035);
+    headGroup.add(beanie, cuff, beard);
+
+  } else if (custType.type === 'office') {
+    // Neat side-parted hair, Red Tie & Leather Briefcase in left hand
+    const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.172, 18, 14, 0, Math.PI * 2, 0, Math.PI * 0.56), hairMat);
+    hairCap.position.set(0, 0.02, -0.01);
+    headGroup.add(hairCap);
+
+    const tie = new THREE.Mesh(
+      new THREE.BoxGeometry(0.045, 0.30, 0.018),
+      new THREE.MeshStandardMaterial({ color: 0xdc2626 })
+    );
+    tie.position.set(0, 1.14, 0.16);
+    g.add(tie);
+
+    const briefcase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.07, 0.24, 0.32),
+      new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.45 })
+    );
+    briefcase.position.set(-0.04, -0.52, 0.02);
+    armL.add(briefcase);
+  }
+
+  g.userData.limbs = { legL, legR, armL, armR, headGroup };
+  return g;
+}
+
+// Background Passersby walking along the Karaköy promenade with full limb swing
+const passersby = [];
+for (let i = 0; i < 6; i++) {
+  const randomType = CUSTOMER_TYPES[i % (CUSTOMER_TYPES.length - 1)];
+  const pMesh = buildCustomerMesh(randomType);
+  const dir = i % 2 === 0 ? 1 : -1;
+  pMesh.position.set((i - 2.5) * 6.5, 0, -3.1 - (i % 3) * 0.55);
+  pMesh.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2;
+  scene.add(pMesh);
+  passersby.push({ mesh: pMesh, speed: (1.15 + Math.random() * 0.55) * dir, phase: Math.random() * 10 });
+}
+
+// Flying Seagulls + Swooping Simit-Thief Seagull
+const seagulls = [];
+let thiefSeagull = null;
+
+function createSeagullMesh() {
+  const g = new THREE.Group();
+  const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.45 });
+  const greyTipMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.55 });
+  const beakMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+
+  const body = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.48, 10), whiteMat);
+  body.rotation.x = Math.PI / 2;
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 8), beakMat);
+  beak.rotation.x = Math.PI / 2;
+  beak.position.z = 0.28;
+
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.02, 0.16), whiteMat);
+  wingL.position.x = -0.23;
+  const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.02, 0.16), greyTipMat);
+  wingR.position.x = 0.23;
+
+  g.add(body, beak, wingL, wingR);
+  g.userData.wingL = wingL;
+  g.userData.wingR = wingR;
+  return g;
+}
+
+for (let i = 0; i < 10; i++) {
+  const gull = createSeagullMesh();
+  scene.add(gull);
+  seagulls.push({
+    mesh: gull,
+    cx: (Math.random() - 0.5) * 45,
+    cy: 4.8 + Math.random() * 6.5,
+    cz: -14 - Math.random() * 32,
+    radius: 5 + Math.random() * 9,
+    speed: 0.65 + Math.random() * 0.55,
+    angle: Math.random() * Math.PI * 2
+  });
+}
+
+// Swooping Thief Seagull (Clickable to shoo away!)
+const thiefGullMesh = createSeagullMesh();
+thiefGullMesh.scale.setScalar(1.45);
+thiefGullMesh.visible = false;
+thiefGullMesh.traverse(c => { if (c.isMesh) { c.userData.isThiefGull = true; clickableProducts.push(c); } });
+scene.add(thiefGullMesh);
+
+// Rain Particles for Bosphorus showers
+const rainGeo = new THREE.BufferGeometry();
+const rainCount = 650;
+const rainPositions = new Float32Array(rainCount * 3);
+for (let i = 0; i < rainCount; i++) {
+  rainPositions[i * 3] = (Math.random() - 0.5) * 26;
+  rainPositions[i * 3 + 1] = Math.random() * 14;
+  rainPositions[i * 3 + 2] = 2 - Math.random() * 18;
+}
+rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+const rainMat = new THREE.PointsMaterial({ color: 0xbae6fd, size: 0.07, transparent: true, opacity: 0.55 });
+const rainSystem = new THREE.Points(rainGeo, rainMat);
+rainSystem.visible = false;
+scene.add(rainSystem);
+
+/* ============================================================================
+   11. UI HELPERS & INTERACTION LOGIC
+   ============================================================================ */
+function showToast(msg, color = '#f6c453') {
+  const box = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderColor = color;
+  el.textContent = msg;
+  box.appendChild(el);
+  setTimeout(() => el.remove(), 1900);
+}
+
+function getEffectivePrice(prod) {
+  const bonus = (state.upgrades.warmer && ['simit', 'pogaca', 'acma', 'kasarli'].includes(prod.id)) ? 3 : 0;
+  return prod.price + bonus;
+}
+
+function getMaxStock(prod) {
+  if (prod.isTea) return 99;
+  return prod.maxStock + (state.upgrades.shelf ? 8 : 0);
+}
+
+function formatReputationStars(rep) {
+  const fullStars = Math.max(1, Math.min(5, Math.round(rep)));
+  return `${'★'.repeat(fullStars)}${'☆'.repeat(5 - fullStars)} (${rep.toFixed(1)})`;
+}
+
+function updateHUD() {
+  document.getElementById('hud-money').textContent = `${state.money} ₺`;
+
+  const hours = Math.floor(state.timeOfDay);
+  const mins = Math.floor((state.timeOfDay - hours) * 60);
+  const hh = String(hours).padStart(2, '0');
+  const mm = String(mins).padStart(2, '0');
+  document.getElementById('hud-clock').textContent = `Gün ${state.day} • ${hh}:${mm}`;
+
+  document.getElementById('hud-rep').textContent = formatReputationStars(state.reputation);
+
+  const teaPct = Math.round((state.teaLevel / state.maxTea) * 100);
+  const teaEl = document.getElementById('hud-tea');
+  teaEl.textContent = `${teaPct}%`;
+  teaEl.style.color = teaPct < 25 ? '#ff8a80' : '#f6c453';
+
+  const isRush = (state.timeOfDay >= 8.0 && state.timeOfDay <= 10.0) ||
+                 (state.timeOfDay >= 12.5 && state.timeOfDay <= 14.5) ||
+                 (state.timeOfDay >= 17.5 && state.timeOfDay <= 19.5);
+  document.getElementById('rush-banner').style.display = isRush ? 'inline-block' : 'none';
+
+  const goalEl = document.getElementById('goal-pill');
+  goalEl.textContent = state.dailyGoalDone
+    ? `✅ Günlük Hedef Tamam! (+40₺ Ödül)`
+    : `🎯 Hedef: ${state.dailyGoalTarget} Müşteri (${state.dailyServed}/${state.dailyGoalTarget})`;
+
+  const bar = document.getElementById('product-bar');
+  bar.innerHTML = '';
+  PRODUCTS.forEach(p => {
+    const stockCount = p.isTea ? Math.floor(state.teaLevel / 10) : (state.stock[p.id] || 0);
+    const card = document.createElement('div');
+    card.className = 'prod-card' + (stockCount <= 0 ? ' out-of-stock' : '');
+    card.innerHTML = `
+      <span class="prod-key">[${p.key}]</span>
+      <div class="prod-icon">${p.icon}</div>
+      <div class="prod-name">${p.name}</div>
+      <div class="prod-meta">
+        <span class="prod-price">${getEffectivePrice(p)}₺</span>
+        <span class="prod-stock ${stockCount <= 3 ? 'low' : ''}">${p.isTea ? (stockCount + ' brd') : ('x' + stockCount)}</span>
+      </div>
+    `;
+    card.addEventListener('click', () => addProductToTray(p.id));
+    bar.appendChild(card);
+  });
+
+  sync3DStockVisibility();
+  renderTrayUI();
+}
+
+function renderTrayUI() {
+  const wrap = document.getElementById('tray-items');
+  const totalEl = document.getElementById('tray-total');
+  const btnClear = document.getElementById('btn-clear-tray');
+  const btnServe = document.getElementById('btn-serve');
+
+  while (servingTray3DGroup.children.length > 0) {
+    servingTray3DGroup.remove(servingTray3DGroup.children[0]);
+  }
+
+  if (state.tray.length === 0) {
+    wrap.innerHTML = `<span style="color:#94a3b8;font-size:12px;">Tezgah üzerindeki 3B ürünlere veya aşağıdaki düğmelere tıklayın...</span>`;
+    totalEl.textContent = '0 ₺';
+    btnClear.disabled = true;
+    btnServe.disabled = !state.currentCustomer;
+  } else {
+    wrap.innerHTML = '';
+    let sum = 0;
+    state.tray.forEach((prodId, idx) => {
+      const p = PRODUCTS.find(x => x.id === prodId);
+      sum += getEffectivePrice(p);
+      const pill = document.createElement('span');
+      pill.className = 'tray-pill';
+      pill.innerHTML = `${p.icon} ${p.name} ✕`;
+      pill.title = 'Tepsiden geri koy';
+      pill.addEventListener('click', () => removeProductFromTray(idx));
+      wrap.appendChild(pill);
+
+      const mini = p.id === 'simit' ? createSimitMesh() :
+                   p.id === 'cay' ? createTeaGlassMesh() :
+                   new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), matPastry);
+      mini.position.set(((idx % 3) - 1) * 0.08, Math.floor(idx / 3) * 0.04, 0);
+      servingTray3DGroup.add(mini);
+    });
+    if (state.currentCustomer && state.currentCustomer.bargainDiscount) {
+      sum = Math.max(5, sum - state.currentCustomer.bargainDiscount);
+    }
+    totalEl.textContent = `${sum} ₺`;
+    btnClear.disabled = false;
+    btnServe.disabled = !state.currentCustomer;
+  }
+
+  if (state.currentCustomer) {
+    const chipsWrap = document.getElementById('order-chips');
+    chipsWrap.innerHTML = '';
+    const tempTray = [...state.tray];
+    state.currentCustomer.order.forEach(reqId => {
+      const p = PRODUCTS.find(x => x.id === reqId);
+      const matchIdx = tempTray.indexOf(reqId);
+      const fulfilled = matchIdx !== -1;
+      if (fulfilled) tempTray.splice(matchIdx, 1);
+
+      const chip = document.createElement('span');
+      chip.className = 'order-chip' + (fulfilled ? ' fulfilled' : '');
+      chip.innerHTML = `${fulfilled ? '✓' : p.icon} ${p.name}`;
+      chipsWrap.appendChild(chip);
+    });
+  }
+}
+
+function addProductToTray(prodId) {
+  sound.init();
+  sound.resume();
+  const prod = PRODUCTS.find(x => x.id === prodId);
+  if (!prod) return;
+
+  if (prod.isTea) {
+    if (state.teaLevel < 10) {
+      sound.playError();
+      showToast('🫖 Semaverde çay bitti! Hemen "Çay Demle" düğmesine basın!', '#ef5350');
+      return;
+    }
+    state.teaLevel = Math.max(0, state.teaLevel - (state.upgrades.samovar ? 7 : 10));
+    sound.playTeaPour();
+  } else {
+    if ((state.stock[prodId] || 0) <= 0) {
+      sound.playError();
+      showToast(`📦 ${prod.name} kalmadı! Stok menüsünden yenileyin.`, '#ef5350');
+      return;
+    }
+    state.stock[prodId]--;
+    sound.playPop();
+  }
+
+  state.tray.push(prodId);
+  updateHUD();
+}
+
+function removeProductFromTray(idx) {
+  const prodId = state.tray[idx];
+  const prod = PRODUCTS.find(x => x.id === prodId);
+  if (prod) {
+    if (prod.isTea) {
+      state.teaLevel = Math.min(state.maxTea, state.teaLevel + (state.upgrades.samovar ? 7 : 10));
+    } else {
+      state.stock[prodId] = (state.stock[prodId] || 0) + 1;
+    }
+  }
+  state.tray.splice(idx, 1);
+  sound.playPop();
+  updateHUD();
+}
+
+function clearTray() {
+  while (state.tray.length > 0) {
+    removeProductFromTray(0);
+  }
+}
+
+/* ============================================================================
+   12. CUSTOMER SPAWNING, ORDERS, BARGAINING & CASHIER SYSTEM
+   ============================================================================ */
+let customerSpawnCooldown = 1.2;
+
+function spawnNextCustomer() {
+  if (state.currentCustomer || !state.dayActive) return;
+
+  state.customersSpawnedToday++;
+
+  // Guarantee Tekir the street cat visits on the 3rd customer of the day (within ~60-90 seconds of play), then randomly (~14%) afterwards!
+  const forceCat = !state.catVisitedToday && state.customersSpawnedToday === 3;
+  const isCatRoll = forceCat || (state.customersSpawnedToday > 3 && Math.random() < 0.14);
+  if (isCatRoll) state.catVisitedToday = true;
+
+  const template = isCatRoll
+    ? CUSTOMER_TYPES.find(c => c.isCat)
+    : CUSTOMER_TYPES[Math.floor(Math.random() * (CUSTOMER_TYPES.length - 1))];
+
+  const orderCount = template.isCat ? 1 : (1 + Math.floor(Math.random() * 3));
+  const order = [];
+  for (let i = 0; i < orderCount; i++) {
+    const pick = template.pool[Math.floor(Math.random() * template.pool.length)];
+    order.push(pick);
+  }
+
+  let maxPatience = template.patience;
+  if (state.upgrades.umbrella) maxPatience *= 1.25;
+  if (state.weather === 'rain' && !state.upgrades.umbrella) maxPatience *= 0.85;
+
+  const bargainDiscount = (template.bargains && order.length >= 2) ? 5 : 0;
+  const dialogue = template.dialogues[Math.floor(Math.random() * template.dialogues.length)];
+
+  while (activeCustomerGroup.children.length > 0) {
+    activeCustomerGroup.remove(activeCustomerGroup.children[0]);
+  }
+  const mesh = buildCustomerMesh(template);
+  const startX = Math.random() < 0.5 ? -4.5 : 4.5;
+  activeCustomerGroup.position.set(startX, 0, -1.35);
+  activeCustomerGroup.add(mesh);
+
+  state.currentCustomer = {
+    template,
+    mesh,
+    order,
+    dialogue,
+    patience: maxPatience,
+    maxPatience,
+    bargainDiscount,
+    phase: 'walking_in',
+    exitDir: startX > 0 ? -1 : 1,
+    walkCycle: 0
+  };
+
+  if (template.isCat) {
+    sound.playMeow();
+    showToast('🐾 Sokak kedisi Tekir tezgaha geldi!', '#f6c453');
+  }
+
+  document.getElementById('cust-title').textContent = template.title + (bargainDiscount ? ' (-5₺ Pazarlık İndirimi)' : '');
+  document.getElementById('cust-dialogue').textContent = `"${dialogue}"`;
+  document.getElementById('cust-mood').textContent = template.isCat ? '🐱' : '😊';
+  document.getElementById('customer-panel').classList.add('active');
+  updateHUD();
+}
+
+function handleServeButtonClick() {
+  const cust = state.currentCustomer;
+  if (!cust || (cust.phase !== 'waiting' && cust.phase !== 'walking_in')) return;
+  if (state.tray.length === 0) {
+    showToast('Önce müşterinin istediği ürünleri tepsiye koyun!', '#ef5350');
+    return;
+  }
+
+  // Snap customer to counter if they were just finishing their last step
+  activeCustomerGroup.position.x = 0;
+  activeCustomerGroup.position.y = 0;
+  activeCustomerGroup.rotation.y = 0;
+  cust.phase = 'waiting';
+
+  // If it's Tekir the street cat, feeding is a gift of kindness!
+  if (cust.template.isCat) {
+    sound.playMeow();
+    sound.playSuccess();
+    state.tray = [];
+    state.reputation = Number(Math.min(5.0, state.reputation + 0.35).toFixed(2));
+    const luckyCoin = 20;
+    state.money += luckyCoin;
+    state.dailyEarned += luckyCoin;
+    state.dailyServed++;
+    showToast('🐾 Tekir mutlu oldu! Yanındaki turist 20₺ uğur bahşişi bıraktı! (+İtibar)', '#69f0ae');
+    checkDailyGoal();
+    dismissCurrentCustomer(true);
+    return;
+  }
+
+  let due = 0;
+  state.tray.forEach(id => {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) due += getEffectivePrice(p);
+  });
+  if (cust.bargainDiscount) due = Math.max(5, due - cust.bargainDiscount);
+
+  const possibleNotes = [due, Math.ceil(due / 10) * 10, Math.ceil(due / 20) * 20, 50, 100, 200]
+    .filter(n => n >= due);
+  const paid = possibleNotes[Math.floor(Math.random() * Math.min(3, possibleNotes.length))];
+
+  cust.dueAmount = due;
+  cust.paidAmount = paid;
+  cust.phase = 'paying';
+  state.changeGiven = 0;
+
+  document.getElementById('cash-cust-name').textContent = cust.template.title;
+  document.getElementById('cash-due').textContent = `${due} ₺`;
+  document.getElementById('cash-paid').textContent = `${paid} ₺`;
+  document.getElementById('cash-given').textContent = `0 ₺`;
+  document.getElementById('cashier-modal').classList.add('active');
+}
+
+function confirmCashierTransaction() {
+  const cust = state.currentCustomer;
+  if (!cust) return;
+
+  const expectedChange = cust.paidAmount - cust.dueAmount;
+  const givenChange = state.changeGiven;
+
+  const sortedReq = [...cust.order].sort().join(',');
+  const sortedTray = [...state.tray].sort().join(',');
+  const orderCorrect = sortedReq === sortedTray;
+  const changeCorrect = givenChange === expectedChange;
+
+  document.getElementById('cashier-modal').classList.remove('active');
+  state.tray = [];
+
+  if (orderCorrect && changeCorrect) {
+    const patienceRatio = cust.patience / cust.maxPatience;
+    let tip = patienceRatio > 0.60 ? Math.round(cust.dueAmount * 0.22) : (patienceRatio > 0.30 ? 5 : 0);
+    if (state.upgrades.radio && sound.radioOn) tip = Math.round(tip * 1.35) + 3;
+    if (cust.template.type === 'tourist') tip += 10;
+
+    const totalEarned = cust.dueAmount + tip;
+    state.money += totalEarned;
+    state.dailyEarned += totalEarned;
+    state.dailyServed++;
+    if (tip > state.dailyBestTip) state.dailyBestTip = tip;
+
+    // Fast & accurate service increases reputation (or keeps it at 5.0 max); never decreases on correct service!
+    const repGain = patienceRatio >= 0.45 ? 0.20 : 0.08;
+    state.reputation = Number(Math.min(5.0, state.reputation + repGain).toFixed(2));
+
+    sound.playSuccess();
+    showToast(`✅ Harika Servis! +${cust.dueAmount}₺ ${tip > 0 ? `(+${tip}₺ Bahşiş!)` : ''}`, '#69f0ae');
+    checkDailyGoal();
+    dismissCurrentCustomer(true);
+  } else {
+    // Only wrong order or wrong change lowers reputation
+    sound.playError();
+    state.reputation = Number(Math.max(1.0, state.reputation - 0.35).toFixed(2));
+    if (!orderCorrect) {
+      showToast('❌ Yanlış ürün verdin! Müşteri söylendi.', '#ef5350');
+    } else if (givenChange < expectedChange) {
+      showToast(`❌ Para üstü eksik! (${expectedChange}₺ yerine ${givenChange}₺ verdin)`, '#ef5350');
+      state.money += cust.dueAmount;
+      state.dailyEarned += cust.dueAmount;
+    } else {
+      const loss = givenChange - expectedChange;
+      state.money = Math.max(0, state.money + cust.dueAmount - loss);
+      showToast(`⚠️ Fazla para üstü verdin! (-${loss}₺ zarar)`, '#ffb74d');
+    }
+    dismissCurrentCustomer(false);
+  }
+}
+
+function checkDailyGoal() {
+  if (!state.dailyGoalDone && state.dailyServed >= state.dailyGoalTarget) {
+    state.dailyGoalDone = true;
+    state.money += 40;
+    state.dailyEarned += 40;
+    showToast('🏆 Günlük Müşteri Hedefi Tamamlandı! +40₺ Esnaf Ödülü!', '#f6c453');
+  }
+}
+
+function dismissCurrentCustomer(happy) {
+  if (!state.currentCustomer) return;
+  document.getElementById('cust-mood').textContent = happy ? '🤩' : '😠';
+  state.currentCustomer.phase = 'walking_out';
+  document.getElementById('customer-panel').classList.remove('active');
+  document.getElementById('cashier-modal').classList.remove('active');
+  saveGame();
+  updateHUD();
+}
+
+/* ============================================================================
+   13. SWOOPING SEAGULL THIEF EVENT (GUARANTEED WITHIN FIRST 1-2 MINS)
+   ============================================================================ */
+let gullAttackCooldown = 25; // First swoop happens ~25 seconds into the day!
+
+function triggerThiefSeagull() {
+  if (thiefSeagull || (state.stock.simit || 0) <= 0 || !state.dayActive) return;
+  state.gullAttackedToday = true;
+  sound.playSeagull();
+  showToast('🐦 DİKKAT! Hırçın bir martı simitlere dalıyor! Kaçırmak için martıya tıkla!', '#ffb74d');
+  thiefGullMesh.visible = true;
+  thiefGullMesh.position.set(-5.5, 4.8, -4.5);
+  thiefSeagull = { progress: 0 };
+}
+
+function shooThiefSeagull() {
+  if (!thiefSeagull) return;
+  sound.playPop();
+  sound.playSeagull();
+  thiefGullMesh.visible = false;
+  thiefSeagull = null;
+  state.reputation = Number(Math.min(5.0, state.reputation + 0.10).toFixed(2));
+  showToast('👏 Martıyı kovdun! Simitler kurtuldu!', '#69f0ae');
+  updateHUD();
+}
+
+/* ============================================================================
+   14. RAYCASTING (3D STAND PRODUCT CLICKS & HOVER TOOLTIP)
+   ============================================================================ */
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+const tooltip = document.getElementById('hover-tooltip');
+
+window.addEventListener('pointermove', (e) => {
+  if (e.target !== renderer.domElement) {
+    tooltip.style.display = 'none';
+    return;
+  }
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  const hits = raycaster.intersectObjects(clickableProducts, false);
+  const visibleHit = hits.find(h => h.object.visible && (!h.object.parent || h.object.parent.visible));
+
+  if (visibleHit) {
+    if (visibleHit.object.userData.isThiefGull) {
+      tooltip.textContent = '🐦 Hırçın Martıyı Kov! (Tıkla)';
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+      renderer.domElement.style.cursor = 'pointer';
+      return;
+    }
+    const prodId = visibleHit.object.userData.productId;
+    const prod = PRODUCTS.find(x => x.id === prodId);
+    if (prod) {
+      tooltip.textContent = `${prod.icon} ${prod.name} — ${getEffectivePrice(prod)} ₺`;
+      tooltip.style.display = 'block';
+      tooltip.style.left = `${e.clientX}px`;
+      tooltip.style.top = `${e.clientY}px`;
+      renderer.domElement.style.cursor = 'pointer';
+      return;
+    }
+  }
+  tooltip.style.display = 'none';
+  renderer.domElement.style.cursor = 'default';
+});
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  const hits = raycaster.intersectObjects(clickableProducts, false);
+  const visibleHit = hits.find(h => h.object.visible && (!h.object.parent || h.object.parent.visible));
+  if (!visibleHit) return;
+
+  if (visibleHit.object.userData.isThiefGull) {
+    shooThiefSeagull();
+    return;
+  }
+  const prodId = visibleHit.object.userData.productId;
+  if (prodId) addProductToTray(prodId);
+});
+
+window.addEventListener('keydown', (e) => {
+  if (!state.dayActive) return;
+  const prod = PRODUCTS.find(p => p.key === e.key);
+  if (prod && !document.getElementById('cashier-modal').classList.contains('active')) {
+    addProductToTray(prod.id);
+  } else if (e.key === 'Enter' && state.currentCustomer && state.currentCustomer.phase === 'waiting') {
+    handleServeButtonClick();
+  }
+});
+
+/* ============================================================================
+   15. RESTOCK, BREW TEA, DAY SUMMARY & UPGRADES UI
+   ============================================================================ */
+function openRestockModal() {
+  const list = document.getElementById('restock-list');
+  document.getElementById('restock-money').textContent = `${state.money} ₺`;
+  list.innerHTML = '';
+
+  PRODUCTS.filter(p => !p.isTea).forEach(p => {
+    const cur = state.stock[p.id] || 0;
+    const max = getMaxStock(p);
+    const packQty = Math.min(5, max - cur);
+    const packCost = packQty * p.cost;
+
+    const item = new DOMParser().parseFromString(`
+      <div class="restock-item">
+        <div class="restock-item-top">
+          <span>${p.icon} ${p.name}</span>
+          <span style="color:var(--gold);">${cur}/${max}</span>
+        </div>
+        <div style="font-size:12px;color:#cbd5e1;">Birim Maliyet: ${p.cost}₺ • Satış: ${getEffectivePrice(p)}₺</div>
+        <button class="btn btn-serve" style="width:100%;justify-content:center;padding:6px;" ${packQty <= 0 || state.money < packCost ? 'disabled' : ''}>
+          ${packQty <= 0 ? 'Stok Dolu' : `+${packQty} Adet Al (${packCost} ₺)`}
+        </button>
+      </div>
+    `, 'text/html').body.firstElementChild;
+
+    item.querySelector('button').addEventListener('click', () => {
+      if (packQty > 0 && state.money >= packCost) {
+        state.money -= packCost;
+        state.stock[p.id] += packQty;
+        sound.playCoin();
+        updateHUD();
+        openRestockModal();
+      }
+    });
+    list.appendChild(item);
+  });
+
+  document.getElementById('restock-modal').classList.add('active');
+}
+
+document.getElementById('btn-restock-all').addEventListener('click', () => {
+  let bought = false;
+  PRODUCTS.filter(p => !p.isTea).forEach(p => {
+    const need = getMaxStock(p) - (state.stock[p.id] || 0);
+    if (need > 0) {
+      const afford = Math.min(need, Math.floor(state.money / p.cost));
+      if (afford > 0) {
+        state.money -= afford * p.cost;
+        state.stock[p.id] += afford;
+        bought = true;
+      }
+    }
+  });
+  if (bought) {
+    sound.playCoin();
+    showToast('📦 Tezgah stokları tazelendi!', '#69f0ae');
+    updateHUD();
+    openRestockModal();
+  }
+});
+
+document.getElementById('btn-brew-tea').addEventListener('click', () => {
+  sound.init();
+  sound.resume();
+  if (state.teaLevel >= state.maxTea - 5) {
+    showToast('🫖 Çaydanlık zaten dolu ve taze!', '#f6c453');
+    return;
+  }
+  if (state.money < 15) {
+    sound.playError();
+    showToast('Çay demlemek için 15 ₺ gerekli!', '#ef5350');
+    return;
+  }
+  state.money -= 15;
+  state.teaLevel = state.maxTea;
+  sound.playTeaPour();
+  showToast('🫖 Rize çayı taze demlendi! Mis gibi koktu!', '#69f0ae');
+  updateHUD();
+});
+
+function endGameDay() {
+  state.dayActive = false;
+  if (state.currentCustomer) {
+    document.getElementById('customer-panel').classList.remove('active');
+    document.getElementById('cashier-modal').classList.remove('active');
+    state.currentCustomer = null;
+  }
+  clearTray();
+  saveGame();
+
+  document.getElementById('sum-title').textContent = `🌙 Gün Sonu Özeti — Gün ${state.day}`;
+  document.getElementById('sum-rep').textContent = formatReputationStars(state.reputation);
+  document.getElementById('sum-served').textContent = state.dailyServed;
+  document.getElementById('sum-earned').textContent = `${state.dailyEarned} ₺`;
+  document.getElementById('sum-best-tip').textContent = `${state.dailyBestTip} ₺`;
+  document.getElementById('sum-total-cash').textContent = `${state.money} ₺`;
+
+  renderUpgradeCards();
+  document.getElementById('summary-modal').classList.add('active');
+}
+
+function renderUpgradeCards() {
+  const wrap = document.getElementById('upgrade-list');
+  wrap.innerHTML = '';
+  UPGRADES.forEach(up => {
+    const owned = !!state.upgrades[up.id];
+    const card = document.createElement('div');
+    card.className = 'restock-item';
+    card.innerHTML = `
+      <div class="restock-item-top">
+        <span>${up.icon} ${up.name}</span>
+        <span style="color:var(--gold);">${owned ? 'ALINDI' : up.cost + ' ₺'}</span>
+      </div>
+      <div style="font-size:12px;color:#cbd5e1;">${up.desc}</div>
+      <button class="btn btn-serve" style="width:100%;justify-content:center;padding:6px;" ${owned || state.money < up.cost ? 'disabled' : ''}>
+        ${owned ? '✓ Mevcut' : `Satın Al (${up.cost} ₺)`}
+      </button>
+    `;
+    card.querySelector('button').addEventListener('click', () => {
+      if (!owned && state.money >= up.cost) {
+        state.money -= up.cost;
+        state.upgrades[up.id] = true;
+        if (up.id === 'samovar') state.maxTea = 160;
+        if (up.id === 'umbrella' && umbrellaGroup) umbrellaGroup.visible = true;
+        sound.playSuccess();
+        saveGame();
+        document.getElementById('sum-total-cash').textContent = `${state.money} ₺`;
+        renderUpgradeCards();
+        updateHUD();
+      }
+    });
+    wrap.appendChild(card);
+  });
+}
+
+function startNewDay(incrementDay = false) {
+  if (incrementDay) state.day++;
+  state.timeOfDay = 8.0; // Bright 08:00 AM start
+  state.dailyServed = 0;
+  state.dailyEarned = 0;
+  state.dailyBestTip = 0;
+  state.dailyGoalTarget = 6 + state.day * 2;
+  state.dailyGoalDone = false;
+  state.teaLevel = state.maxTea;
+  state.catVisitedToday = false;
+  state.gullAttackedToday = false;
+  state.customersSpawnedToday = 0;
+  gullAttackCooldown = 24; // Guaranteed first seagull swoop within first ~24s of play
+  state.dayActive = true;
+
+  // Day 1 is always bright sunny Istanbul weather so the panorama shines; later days roll weather
+  const r = state.day === 1 ? 0.1 : Math.random();
+  state.weather = r < 0.68 ? 'sunny' : (r < 0.86 ? 'breeze' : 'rain');
+  const wBadge = document.getElementById('weather-badge');
+  if (state.weather === 'sunny') {
+    wBadge.textContent = '☀️ Güneşli Boğaz Havası';
+    rainSystem.visible = false;
+  } else if (state.weather === 'breeze') {
+    wBadge.textContent = '🌬️ Poyraz Esintili (Çay Talebi Yüksek)';
+    rainSystem.visible = false;
+  } else {
+    wBadge.textContent = '🌧️ Boğaz Yağmuru';
+    rainSystem.visible = true;
+  }
+
+  umbrellaGroup.visible = !!state.upgrades.umbrella;
+  saveGame();
+  updateHUD();
+}
+
+/* ============================================================================
+   16. TIME OF DAY LIGHTING & ATMOSPHERE UPDATER
+   ============================================================================ */
+const colMorningTop = new THREE.Color(0x1d8cf8);
+const colMorningHor = new THREE.Color(0xdbeafe);
+const colNoonTop    = new THREE.Color(0x0284c7);
+const colNoonHor    = new THREE.Color(0xe0f2fe);
+const colSunsetTop  = new THREE.Color(0x4c1d95);
+const colSunsetHor  = new THREE.Color(0xfb923c);
+const colNightTop   = new THREE.Color(0x0f172a);
+const colNightHor   = new THREE.Color(0x1e293b);
+
+function updateTimeOfDayAtmosphere(dt) {
+  if (state.dayActive) {
+    state.timeOfDay += dt * 0.058;
+    if (state.timeOfDay >= 21.0) {
+      endGameDay();
+      return;
+    }
+  }
+
+  const t = state.timeOfDay; // 8.0 .. 21.0
+  const norm = Math.max(0, Math.min(1, (t - 7.5) / (21.0 - 7.5)));
+  const sunAngle = norm * Math.PI;
+
+  const sx = Math.cos(sunAngle) * 95;
+  const sy = Math.sin(sunAngle) * 58 + 8;
+  const sz = -138;
+  sunGroup.position.set(sx, sy, sz);
+  sunLight.position.set(sx * 0.45, Math.max(10, sy * 0.75), -50);
+
+  if (t < 11.5) {
+    const f = Math.max(0, (t - 7.5) / 4.0);
+    skyMat.uniforms.topColor.value.lerpColors(colMorningTop, colNoonTop, f);
+    skyMat.uniforms.horizonColor.value.lerpColors(colMorningHor, colNoonHor, f);
+    sunLight.intensity = 2.2 + f * 0.4;
+    sunLight.color.setHex(0xfffbeb);
+    hemiLight.intensity = 1.15;
+    cartLamp.intensity = 0.15;
+  } else if (t < 17.0) {
+    skyMat.uniforms.topColor.value.copy(colNoonTop);
+    skyMat.uniforms.horizonColor.value.copy(colNoonHor);
+    sunLight.intensity = 2.5;
+    hemiLight.intensity = 1.2;
+    cartLamp.intensity = 0.1;
+  } else if (t < 19.3) {
+    const f = (t - 17.0) / 2.3;
+    skyMat.uniforms.topColor.value.lerpColors(colNoonTop, colSunsetTop, f);
+    skyMat.uniforms.horizonColor.value.lerpColors(colNoonHor, colSunsetHor, f);
+    sunLight.intensity = 2.4 - f * 1.3;
+    sunLight.color.setHex(0xffedd5);
+    hemiLight.intensity = 1.1 - f * 0.4;
+    cartLamp.intensity = f * 1.5;
+  } else {
+    const f = Math.min(1, (t - 19.3) / 1.5);
+    skyMat.uniforms.topColor.value.lerpColors(colSunsetTop, colNightTop, f);
+    skyMat.uniforms.horizonColor.value.lerpColors(colSunsetHor, colNightHor, f);
+    sunLight.intensity = Math.max(0.35, 1.0 - f * 0.65);
+    sunLight.color.setHex(0x94a3b8);
+    hemiLight.intensity = 0.55;
+    cartLamp.intensity = 2.2;
+  }
+
+  scene.fog.color.copy(skyMat.uniforms.horizonColor.value);
+
+  const nightGlow = t > 17.5 ? Math.min(1.3, (t - 17.5) * 0.55) : 0.0;
+  cityWindowMaterials.forEach(m => {
+    m.emissiveIntensity = nightGlow;
+  });
+}
+
+/* ============================================================================
+   17. UI EVENT LISTENERS
+   ============================================================================ */
+document.getElementById('btn-start-game').addEventListener('click', () => {
+  sound.init();
+  sound.resume();
+  document.getElementById('title-screen').classList.remove('active');
+  startNewDay(false);
+});
+
+document.getElementById('btn-reset-save').addEventListener('click', () => {
+  localStorage.removeItem(SAVE_KEY);
+  initDefaultState();
+  updateHUD();
+  showToast('Kayıtlı ilerleme sıfırlandı!', '#f6c453');
+});
+
+document.getElementById('btn-clear-tray').addEventListener('click', clearTray);
+document.getElementById('btn-serve').addEventListener('click', handleServeButtonClick);
+
+document.querySelectorAll('.money-btn[data-val]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = Number(btn.getAttribute('data-val'));
+    state.changeGiven += val;
+    sound.playCoin();
+    document.getElementById('cash-given').textContent = `${state.changeGiven} ₺`;
+  });
+});
+
+document.getElementById('btn-reset-change').addEventListener('click', () => {
+  state.changeGiven = 0;
+  sound.playPop();
+  document.getElementById('cash-given').textContent = `0 ₺`;
+});
+
+document.getElementById('btn-confirm-change').addEventListener('click', confirmCashierTransaction);
+
+document.getElementById('btn-open-restock').addEventListener('click', openRestockModal);
+document.getElementById('btn-close-restock').addEventListener('click', () => {
+  document.getElementById('restock-modal').classList.remove('active');
+});
+
+document.getElementById('btn-next-day').addEventListener('click', () => {
+  document.getElementById('summary-modal').classList.remove('active');
+  startNewDay(true);
+});
+
+document.getElementById('btn-mute').addEventListener('click', (e) => {
+  sound.init();
+  sound.setMute(!sound.muted);
+  e.currentTarget.textContent = sound.muted ? '🔇 Sessiz' : '🔊 Ses';
+});
+
+document.getElementById('btn-radio').addEventListener('click', (e) => {
+  sound.init();
+  sound.radioOn = !sound.radioOn;
+  e.currentTarget.textContent = sound.radioOn ? '📻 Radyo: Açık' : '📻 Radyo: Kapalı';
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ============================================================================
+   18. MAIN ANIMATION & GAMEPLAY LOOP (~60 FPS, OVERSHOOT-SAFE)
+   ============================================================================ */
+const clock = new THREE.Clock();
+let hudClockTimer = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.1);
+  const elapsed = clock.getElapsedTime();
+
+  // 1. Very Subtle, Settling Camera Look (3D products stay rock-steady under the cursor!)
+  mouseLook.idleTimer += dt;
+  const lerpFactor = Math.min(1.0, 5.0 * dt);
+  mouseLook.x += (mouseLook.targetX - mouseLook.x) * lerpFactor;
+  mouseLook.y += (mouseLook.targetY - mouseLook.y) * lerpFactor;
+
+  // Idle sway fades out as the cursor rests so clicking 3D items is effortless
+  const swayAmp = Math.max(0.0, 1.0 - mouseLook.idleTimer * 0.45) * 0.0018;
+  camera.position.x = baseCamPos.x + mouseLook.x * 0.09 + Math.sin(elapsed * 0.9) * swayAmp;
+  camera.position.y = baseCamPos.y - mouseLook.y * 0.045 + Math.cos(elapsed * 1.3) * swayAmp;
+  camera.lookAt(
+    baseLookAt.x + mouseLook.x * 0.35,
+    baseLookAt.y - mouseLook.y * 0.22,
+    baseLookAt.z
+  );
+
+  // 2. Animate Sparkling Bosphorus Water Ripples & Glitter
+  waterNormalTex.offset.x = (elapsed * 0.028) % 1;
+  waterNormalTex.offset.y = (elapsed * 0.016) % 1;
+  glitterGroup.children.forEach((strip, idx) => {
+    strip.scale.x = 0.7 + Math.sin(elapsed * 3.5 + idx) * 0.35;
+  });
+
+  // 3. Animate Moving Ferries (Vapur) & Boats (Overshoot-safe wrapping)
+  boats.forEach(b => {
+    const step = b.speed * dt;
+    b.mesh.position.x += step;
+    b.mesh.position.y = -0.35 + Math.sin(elapsed * 1.8 + b.phase) * 0.07;
+    b.mesh.rotation.z = Math.sin(elapsed * 1.4 + b.phase) * 0.018;
+    if (b.speed > 0 && b.mesh.position.x > 135) b.mesh.position.x = -135;
+    if (b.speed < 0 && b.mesh.position.x < -135) b.mesh.position.x = 135;
+  });
+
+  // 4. Animate Seagulls circling over the Bosphorus
+  seagulls.forEach((g, idx) => {
+    g.angle += g.speed * dt;
+    g.mesh.position.set(
+      g.cx + Math.cos(g.angle) * g.radius,
+      g.cy + Math.sin(elapsed * 2 + idx) * 0.5,
+      g.cz + Math.sin(g.angle) * g.radius * 0.45
+    );
+    g.mesh.rotation.y = -g.angle;
+    const flap = Math.sin(elapsed * 7.5 + idx) * 0.38;
+    g.mesh.userData.wingL.rotation.z = flap;
+    g.mesh.userData.wingR.rotation.z = -flap;
+  });
+
+  // 5. Animate Swooping Thief Seagull (Overshoot-safe)
+  if (thiefSeagull) {
+    thiefSeagull.progress = Math.min(1.0, thiefSeagull.progress + dt * 0.28);
+    const p = thiefSeagull.progress;
+    thiefGullMesh.position.x = THREE.MathUtils.lerp(-5.5, -0.65, Math.min(1, p * 1.35));
+    thiefGullMesh.position.y = 1.35 + Math.pow(p - 0.65, 2) * 7.8;
+    thiefGullMesh.position.z = THREE.MathUtils.lerp(-4.5, -0.1, Math.min(1, p * 1.35));
+    const flap = Math.sin(elapsed * 14) * 0.5;
+    thiefGullMesh.userData.wingL.rotation.z = flap;
+    thiefGullMesh.userData.wingR.rotation.z = -flap;
+
+    if (p >= 1.0) {
+      thiefGullMesh.visible = false;
+      thiefSeagull = null;
+      if ((state.stock.simit || 0) > 0) {
+        state.stock.simit--;
+        sound.playError();
+        showToast('😱 Martı tezgahtan 1 simit kapıp kaçtı!', '#ef5350');
+        updateHUD();
+      }
+    }
+  } else if (state.dayActive) {
+    gullAttackCooldown -= dt;
+    if (gullAttackCooldown <= 0) {
+      // First swoop is guaranteed; subsequent ones happen every ~35-50s
+      const shouldAttack = !state.gullAttackedToday || Math.random() < 0.75;
+      gullAttackCooldown = 34 + Math.random() * 16;
+      if (shouldAttack) triggerThiefSeagull();
+    }
+  }
+
+  // 6. Animate Background Promenade Passersby with Articulated Walk Cycle
+  passersby.forEach(p => {
+    p.mesh.position.x += p.speed * dt;
+    p.phase += Math.abs(p.speed) * dt * 5.2;
+    p.mesh.position.y = Math.abs(Math.sin(p.phase)) * 0.035;
+    animateCharacterWalk(p.mesh, p.phase, true, dt);
+    if (p.speed > 0 && p.mesh.position.x > 24) p.mesh.position.x = -24;
+    if (p.speed < 0 && p.mesh.position.x < -24) p.mesh.position.x = 24;
+  });
+
+  // 7. Rain Animation
+  if (rainSystem.visible) {
+    const pos = rainGeo.attributes.position.array;
+    for (let i = 0; i < rainCount; i++) {
+      pos[i * 3 + 1] -= 14 * dt;
+      if (pos[i * 3 + 1] < 0) pos[i * 3 + 1] = 14;
+    }
+    rainGeo.attributes.position.needsUpdate = true;
+  }
+
+  // 8. Active Customer Movement (Overshoot-Safe) & Patience Logic
+  if (state.dayActive) {
+    updateTimeOfDayAtmosphere(dt);
+
+    hudClockTimer += dt;
+    if (hudClockTimer > 0.5) {
+      hudClockTimer = 0;
+      const hours = Math.floor(state.timeOfDay);
+      const mins = Math.floor((state.timeOfDay - hours) * 60);
+      document.getElementById('hud-clock').textContent =
+        `Gün ${state.day} • ${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+    }
+
+    if (!state.currentCustomer) {
+      const isRush = (state.timeOfDay >= 8.0 && state.timeOfDay <= 10.0) ||
+                     (state.timeOfDay >= 12.5 && state.timeOfDay <= 14.5) ||
+                     (state.timeOfDay >= 17.5 && state.timeOfDay <= 19.5);
+      customerSpawnCooldown -= dt * (isRush ? 1.85 : 1.0);
+      if (customerSpawnCooldown <= 0) {
+        customerSpawnCooldown = 1.4 + Math.random() * 1.4;
+        spawnNextCustomer();
+      }
+    } else {
+      const cust = state.currentCustomer;
+      if (cust.phase === 'walking_in') {
+        const dx = 0 - activeCustomerGroup.position.x;
+        if (Math.abs(dx) > 0.01) {
+          activeCustomerGroup.position.x += Math.sign(dx) * Math.min(Math.abs(dx), 3.2 * cust.template.speed * dt);
+          cust.walkCycle += dt * 9.5 * cust.template.speed;
+          activeCustomerGroup.position.y = Math.abs(Math.sin(cust.walkCycle)) * 0.038;
+          activeCustomerGroup.rotation.y = dx > 0 ? Math.PI / 4 : -Math.PI / 4;
+          if (cust.mesh) animateCharacterWalk(cust.mesh, cust.walkCycle, true, dt);
+        } else {
+          activeCustomerGroup.position.x = 0;
+          activeCustomerGroup.position.y = 0;
+          activeCustomerGroup.rotation.y = 0;
+          cust.phase = 'waiting';
+        }
+      } else if (cust.phase === 'waiting') {
+        cust.walkCycle += dt * 2.2;
+        activeCustomerGroup.position.y = Math.sin(cust.walkCycle) * 0.01;
+        if (cust.mesh) animateCharacterWalk(cust.mesh, cust.walkCycle, false, dt);
+
+        cust.patience = Math.max(0, cust.patience - dt);
+        const pct = Math.max(0, (cust.patience / cust.maxPatience) * 100);
+        const bar = document.getElementById('patience-bar');
+        bar.style.width = `${pct}%`;
+        if (pct > 55) {
+          bar.style.background = 'linear-gradient(90deg, #2e7d32, #8bc34a)';
+        } else if (pct > 25) {
+          bar.style.background = 'linear-gradient(90deg, #f57f17, #fbc02d)';
+          if (!cust.template.isCat) document.getElementById('cust-mood').textContent = '😐';
+        } else {
+          bar.style.background = 'linear-gradient(90deg, #b71c1c, #ef5350)';
+          if (!cust.template.isCat) document.getElementById('cust-mood').textContent = '😤';
+        }
+
+        if (cust.patience <= 0) {
+          sound.playError();
+          state.reputation = Number(Math.max(1.0, state.reputation - 0.30).toFixed(2));
+          showToast('⏰ Müşteri beklemekten sıkılıp gitti!', '#ef5350');
+          clearTray();
+          dismissCurrentCustomer(false);
+        }
+      } else if (cust.phase === 'walking_out') {
+        const targetX = cust.exitDir * 5.2;
+        const dx = targetX - activeCustomerGroup.position.x;
+        activeCustomerGroup.position.x += Math.sign(dx) * Math.min(Math.abs(dx), 3.8 * dt);
+        cust.walkCycle += dt * 10;
+        activeCustomerGroup.position.y = Math.abs(Math.sin(cust.walkCycle)) * 0.038;
+        activeCustomerGroup.rotation.y = cust.exitDir > 0 ? Math.PI / 2 : -Math.PI / 2;
+        if (cust.mesh) animateCharacterWalk(cust.mesh, cust.walkCycle, true, dt);
+        if (Math.abs(dx) <= 0.02) {
+          state.currentCustomer = null;
+        }
+      }
+    }
+  } else {
+    updateTimeOfDayAtmosphere(0);
+  }
+
+  renderer.render(scene, camera);
+}
+
+updateTimeOfDayAtmosphere(0);
+updateHUD();
+animate();
+</script>
+</body>
+</html>
