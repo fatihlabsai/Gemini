@@ -3077,7 +3077,7 @@ function animate() {
       if (cust.phase === 'walking_in') {
         const dx = 0 - activeCustomerGroup.position.x;
         if (Math.abs(dx) > 0.08) {
-          activeCustomerGroup.position.x += Math.sign(dx) * 3.2 * cust.template.speed * dt;
+          activeCustomerGroup.position.x += Math.sign(dx) * Math.min(Math.abs(dx), 3.2 * cust.template.speed * dt);
           activeCustomerGroup.position.y = Math.abs(Math.sin(elapsed * 9)) * 0.05;
           activeCustomerGroup.rotation.y = dx > 0 ? Math.PI / 4 : -Math.PI / 4;
         } else {
