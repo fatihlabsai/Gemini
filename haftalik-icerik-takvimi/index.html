@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haftalık İçerik Takvimi</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c1917'/%3E%3Crect x='14' y='18' width='36' height='28' rx='4' fill='none' stroke='%23f5d76e' stroke-width='3'/%3E%3Cpath d='M14 28h36' stroke='%23f5d76e' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f0e8;--ink:#1c1917;--muted:#78716c;--line:#e7e0d4;--card:#fffdf8;
+  --uzun:#1d4ed8;--uzun-bg:#eff6ff;--uzun-line:#bfdbfe;
+  --shorts:#c2410c;--shorts-bg:#fff7ed;--shorts-line:#fed7aa;
+  --topluluk:#0f766e;--topluluk-bg:#f0fdfa;--topluluk-line:#99f6e4;
+  --hazir:#15803d;--today:#b45309;--shadow:0 1px 2px rgba(28,25,23,.06),0 8px 24px rgba(28,25,23,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Be Vietnam Pro",system-ui,sans-serif;min-height:100%}
+body{padding:24px 20px 48px}
+.wrap{max-width:1400px;margin:0 auto}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px}
+h1{margin:0;font-size:1.65rem;letter-spacing:-.03em}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.week-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.week-label{font-weight:600;min-width:220px;text-align:center;font-size:1.02rem}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font-weight:500}
+button:hover,.btn:hover{border-color:#d6d3d1;background:#fff}
+button.icon{width:40px;height:40px;padding:0;font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center}
+button.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+button.primary:hover{background:#44403c}
+button.ghost{background:transparent}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:1.45rem;letter-spacing:-.03em;line-height:1.1}
+.stat span{color:var(--muted);font-size:.8rem}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:start}
+.day{background:var(--card);border:1px solid var(--line);border-radius:16px;min-height:280px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.day.today{border-color:#f0c48a;box-shadow:0 0 0 3px rgba(180,83,9,.12),var(--shadow)}
+.day-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:2px 2px 8px;border-bottom:1px solid var(--line)}
+.day-name{font-weight:700;font-size:.92rem}
+.day-date{color:var(--muted);font-size:.8rem}
+.day.today .day-name{color:var(--today)}
+.add-day{width:100%;border-style:dashed;color:var(--muted);padding:7px;font-size:.82rem}
+.add-day:hover{color:var(--ink);border-style:solid}
+.cards{display:flex;flex-direction:column;gap:8px;flex:1}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;position:relative;background:#fff}
+.item.uzun{background:var(--uzun-bg);border-color:var(--uzun-line)}
+.item.shorts{background:var(--shorts-bg);border-color:var(--shorts-line)}
+.item.topluluk{background:var(--topluluk-bg);border-color:var(--topluluk-line)}
+.item h3{margin:0 0 4px;font-size:.92rem;line-height:1.3;padding-right:22px;word-break:break-word}
+.item .note{margin:0 0 8px;color:#57534e;font-size:.78rem;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.badge{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.item.uzun .badge{color:var(--uzun)}
+.item.shorts .badge{color:var(--shorts)}
+.item.topluluk .badge{color:var(--topluluk)}
+.item-foot{display:flex;align-items:center;gap:6px}
+.item select{flex:1;font:inherit;font-size:.75rem;border:1px solid transparent;background:rgba(255,255,255,.7);border-radius:8px;padding:4px 6px;color:var(--ink)}
+.item.hazir-ok{outline:2px solid rgba(21,128,61,.25)}
+.icon-btn{border:none;background:transparent;padding:0;width:22px;height:22px;color:var(--muted);font-size:.95rem;line-height:1;position:absolute;top:8px;right:6px}
+.icon-btn:hover{color:var(--ink);background:transparent;border:none}
+.empty{color:#a8a29e;font-size:.8rem;text-align:center;padding:18px 6px}
+dialog{border:none;border-radius:18px;padding:0;width:min(440px,calc(100vw - 32px));box-shadow:0 24px 60px rgba(28,25,23,.2)}
+dialog::backdrop{background:rgba(28,25,23,.4)}
+.dlg{padding:22px}
+.dlg h2{margin:0 0 14px;font-size:1.15rem}
+label{display:block;font-size:.8rem;font-weight:600;margin:10px 0 4px}
+input[type=text],textarea,select.field{width:100%;font:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;color:var(--ink)}
+textarea{min-height:80px;resize:vertical}
+.dlg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.footer{margin-top:22px;color:var(--muted);font-size:.85rem}
+.footer a{color:#57534e}
+@media (max-width:980px){
+  .week{grid-template-columns:1fr;gap:12px}
+  .day{min-height:0}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:1.4rem}
+  .week-label{min-width:0}
+}
+@media print{
+  body{background:#fff;padding:0;color:#000}
+  header{margin-bottom:12px}
+  button,.add-day,.icon-btn,.footer{display:none!important}
+  .week-nav .week-label{display:block}
+  .stats{break-inside:avoid}
+  .week{grid-template-columns:repeat(7,1fr);gap:6px}
+  .day{box-shadow:none;min-height:0;break-inside:avoid;border-color:#ddd}
+  .item select{border:none;appearance:none;background:transparent;padding:0}
+  a{text-decoration:none;color:inherit}
+  @page{size:landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Haftalık İçerik Takvimi</h1>
+      <p class="sub">YouTube planını güne göre düzenle; veriler bu tarayıcıda saklanır.</p>
+    </div>
+    <div class="week-nav">
+      <button class="icon" id="prev" aria-label="Önceki hafta">‹</button>
+      <div class="week-label" id="weekLabel"></div>
+      <button class="icon" id="next" aria-label="Sonraki hafta">›</button>
+      <button class="ghost" id="todayBtn">Bu hafta</button>
+      <button class="primary" id="printBtn">Yazdır</button>
+    </div>
+  </header>
+  <section class="stats" aria-label="Haftalık özet">
+    <div class="stat"><b id="nUzun">0</b><span>Uzun video</span></div>
+    <div class="stat"><b id="nShorts">0</b><span>Shorts</span></div>
+    <div class="stat"><b id="nTopluluk">0</b><span>Topluluk gönderisi</span></div>
+    <div class="stat"><b id="nHazir">0</b><span>Hazır</span></div>
+  </section>
+  <section class="week" id="week"></section>
+  <p class="footer"><a href="../">← Gemini projeleri</a></p>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle">
+  <form class="dlg" id="form">
+    <h2 id="dlgTitle">Yeni kart</h2>
+    <input type="hidden" id="editId">
+    <input type="hidden" id="editDay">
+    <label for="fTitle">Başlık</label>
+    <input type="text" id="fTitle" required maxlength="140" placeholder="Videonun veya gönderinin adı">
+    <label for="fType">Tür</label>
+    <select class="field" id="fType">
+      <option value="uzun">Uzun video</option>
+      <option value="shorts">Shorts</option>
+      <option value="topluluk">Topluluk gönderisi</option>
+    </select>
+    <label for="fStatus">Durum</label>
+    <select class="field" id="fStatus">
+      <option value="fikir">Fikir</option>
+      <option value="senaryo">Senaryo</option>
+      <option value="cekim">Çekim</option>
+      <option value="kurgu">Kurgu</option>
+      <option value="hazir">Hazır</option>
+    </select>
+    <label for="fNote">Kısa not</label>
+    <textarea id="fNote" maxlength="400" placeholder="İsteğe bağlı"></textarea>
+    <div class="dlg-actions">
+      <button type="button" id="cancelBtn">Vazgeç</button>
+      <button type="submit" class="primary">Kaydet</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+(function () {
+  const KEY = "gemini-haftalik-icerik-takvimi-v1";
+  const GUNLER = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+  const AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+  const TURLER = { uzun: "Uzun video", shorts: "Shorts", topluluk: "Topluluk" };
+  const DURUMLAR = { fikir: "Fikir", senaryo: "Senaryo", cekim: "Çekim", kurgu: "Kurgu", hazir: "Hazır" };
+
+  let monday = startOfWeek(new Date());
+
+  function startOfWeek(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const offset = (x.getDay() + 6) % 7;
+    x.setDate(x.getDate() - offset);
+    return x;
+  }
+  function addDays(d, n) {
+    const x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+  function iso(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+  function sameDay(a, b) { return iso(a) === iso(b); }
+  function load() {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function save(data) { localStorage.setItem(KEY, JSON.stringify(data)); }
+  function weekKey() { return iso(monday); }
+  function weekItems() {
+    const data = load();
+    return Array.isArray(data[weekKey()]) ? data[weekKey()] : [];
+  }
+  function setWeekItems(items) {
+    const data = load();
+    data[weekKey()] = items;
+    save(data);
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function formatWeek(m) {
+    const sun = addDays(m, 6);
+    const a = m.getDate() + " " + AYLAR[m.getMonth()];
+    const b = sun.getDate() + " " + AYLAR[sun.getMonth()] + " " + sun.getFullYear();
+    if (m.getMonth() === sun.getMonth() && m.getFullYear() === sun.getFullYear()) {
+      return m.getDate() + "–" + sun.getDate() + " " + AYLAR[m.getMonth()] + " " + m.getFullYear();
+    }
+    if (m.getFullYear() === sun.getFullYear()) return a + " – " + b;
+    return a + " " + m.getFullYear() + " – " + b;
+  }
+
+  function render() {
+    document.getElementById("weekLabel").textContent = formatWeek(monday);
+    const items = weekItems();
+    const today = new Date();
+    const root = document.getElementById("week");
+    root.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+      const day = addDays(monday, i);
+      const key = iso(day);
+      const list = items.filter((c) => c.day === key);
+      const col = document.createElement("article");
+      col.className = "day" + (sameDay(day, today) ? " today" : "");
+      col.innerHTML =
+        '<div class="day-head"><span class="day-name">' + GUNLER[i] + '</span>' +
+        '<span class="day-date">' + day.getDate() + " " + AYLAR[day.getMonth()] + "</span></div>" +
+        '<div class="cards"></div>' +
+        '<button type="button" class="add-day" data-day="' + key + '">+ Kart ekle</button>';
+      const box = col.querySelector(".cards");
+      if (!list.length) box.innerHTML = '<div class="empty">Kart yok</div>';
+      list.forEach((card) => box.appendChild(renderCard(card)));
+      root.appendChild(col);
+    }
+    document.getElementById("nUzun").textContent = items.filter((c) => c.type === "uzun").length;
+    document.getElementById("nShorts").textContent = items.filter((c) => c.type === "shorts").length;
+    document.getElementById("nTopluluk").textContent = items.filter((c) => c.type === "topluluk").length;
+    document.getElementById("nHazir").textContent = items.filter((c) => c.status === "hazir").length;
+  }
+
+  function renderCard(card) {
+    const el = document.createElement("article");
+    el.className = "item " + card.type + (card.status === "hazir" ? " hazir-ok" : "");
+    const opts = Object.keys(DURUMLAR).map((k) =>
+      '<option value="' + k + '"' + (card.status === k ? " selected" : "") + ">" + DURUMLAR[k] + "</option>"
+    ).join("");
+    el.innerHTML =
+      '<button type="button" class="icon-btn" data-del="' + esc(card.id) + '" aria-label="Sil">×</button>' +
+      '<div class="badge">' + esc(TURLER[card.type] || card.type) + "</div>" +
+      "<h3>" + esc(card.title) + "</h3>" +
+      (card.note ? '<p class="note">' + esc(card.note) + "</p>" : "") +
+      '<div class="item-foot"><select data-status="' + esc(card.id) + '" aria-label="Durum">' + opts + "</select></div>";
+    el.querySelector("h3").style.cursor = "pointer";
+    el.querySelector("h3").addEventListener("click", () => openDialog(card.day, card));
+    return el;
+  }
+
+  const dlg = document.getElementById("dlg");
+  function openDialog(day, card) {
+    document.getElementById("dlgTitle").textContent = card ? "Kartı düzenle" : "Yeni kart";
+    document.getElementById("editId").value = card ? card.id : "";
+    document.getElementById("editDay").value = day;
+    document.getElementById("fTitle").value = card ? card.title : "";
+    document.getElementById("fType").value = card ? card.type : "uzun";
+    document.getElementById("fStatus").value = card ? card.status : "fikir";
+    document.getElementById("fNote").value = card ? (card.note || "") : "";
+    dlg.showModal();
+    document.getElementById("fTitle").focus();
+  }
+
+  document.getElementById("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const title = document.getElementById("fTitle").value.trim();
+    if (!title) return;
+    const id = document.getElementById("editId").value;
+    const day = document.getElementById("editDay").value;
+    const next = {
+      id: id || uid(),
+      day,
+      title,
+      type: document.getElementById("fType").value,
+      status: document.getElementById("fStatus").value,
+      note: document.getElementById("fNote").value.trim()
+    };
+    let items = weekItems();
+    if (id) items = items.map((c) => (c.id === id ? next : c));
+    else items.push(next);
+    setWeekItems(items);
+    dlg.close();
+    render();
+  });
+  document.getElementById("cancelBtn").addEventListener("click", () => dlg.close());
+  dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+
+  document.getElementById("week").addEventListener("click", (e) => {
+    const add = e.target.closest(".add-day");
+    if (add) { openDialog(add.dataset.day); return; }
+    const del = e.target.closest("[data-del]");
+    if (del) {
+      const id = del.dataset.del;
+      setWeekItems(weekItems().filter((c) => c.id !== id));
+      render();
+    }
+  });
+  document.getElementById("week").addEventListener("change", (e) => {
+    const sel = e.target.closest("[data-status]");
+    if (!sel) return;
+    const id = sel.dataset.status;
+    setWeekItems(weekItems().map((c) => (c.id === id ? Object.assign({}, c, { status: sel.value }) : c)));
+    render();
+  });
+
+  document.getElementById("prev").addEventListener("click", () => { monday = addDays(monday, -7); render(); });
+  document.getElementById("next").addEventListener("click", () => { monday = addDays(monday, 7); render(); });
+  document.getElementById("todayBtn").addEventListener("click", () => { monday = startOfWeek(new Date()); render(); });
+  document.getElementById("printBtn").addEventListener("click", () => window.print());
+  render();
+})();
+</script>
+</body>
+</html>
