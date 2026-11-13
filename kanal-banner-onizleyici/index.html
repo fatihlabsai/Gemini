@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YouTube Kanal Banner Önizleyici</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f0f0f;color:#f1f1f1}
+header{padding:28px 20px 8px;max-width:1100px;margin:0 auto}
+h1{margin:0 0 6px;font-size:1.7rem}
+.sub{margin:0;color:#aaa}
+main{max-width:1100px;margin:0 auto;padding:16px 20px 60px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+button,label.btn{background:#272727;color:#f1f1f1;border:1px solid #3f3f3f;border-radius:18px;padding:9px 16px;font-size:.95rem;cursor:pointer}
+label.btn{background:#f1f1f1;color:#0f0f0f;border-color:#f1f1f1;font-weight:600}
+button:hover{background:#3a3a3a}
+input[type=file]{display:none}
+.chk{display:flex;gap:6px;align-items:center;color:#ccc;font-size:.92rem}
+#info{margin:6px 0 14px;padding:12px 14px;border-radius:10px;background:#1c1c1c;border:1px solid #333;font-size:.95rem;line-height:1.5}
+#info.ok{border-color:#2e7d32}
+#info.warn{border-color:#f9a825;background:#2a2410}
+#info.err{border-color:#c62828;background:#2a1414}
+#info b{color:#fff}
+.grid{display:grid;gap:22px}
+.view h2{font-size:1.05rem;margin:0 0 4px}
+.view p{margin:0 0 10px;color:#aaa;font-size:.88rem}
+.frame{position:relative;background:#000;border:1px solid #333;border-radius:8px;overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.85rem;color:#ccc;margin:10px 0 0}
+.legend i{display:inline-block;width:14px;height:10px;border:2px solid;margin-right:6px;vertical-align:middle}
+.row2{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+@media(max-width:760px){.row2{grid-template-columns:1fr}}
+.phone{max-width:300px;margin:0 auto;border:8px solid #222;border-radius:26px;background:#0f0f0f;padding:10px 0 16px}
+.phone .ch{display:flex;gap:10px;align-items:center;padding:12px}
+.av{width:44px;height:44px;border-radius:50%;background:#555}
+.ln{height:9px;background:#333;border-radius:5px;margin:4px 0}
+footer{text-align:center;color:#777;font-size:.85rem}
+footer a{color:#aaa}
+</style>
+</head>
+<body>
+<header>
+  <h1>YouTube Kanal Banner Önizleyici</h1>
+  <p class="sub">Banner görselini yükle; TV, masaüstü, tablet ve mobilde nasıl kırpılacağını gör. Önerilen ölçü 2560×1440, her cihazda görünen güvenli alan ortadaki 1546×423.</p>
+</header>
+<main>
+  <div class="bar">
+    <label class="btn" for="file">Görsel yükle</label>
+    <input id="file" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
+    <button id="sample" type="button">Örnek görsel</button>
+    <label class="chk"><input id="guides" type="checkbox" checked> Kırpma çerçevelerini göster</label>
+  </div>
+  <div id="info">Henüz görsel yok. Bir dosya seç, sayfaya sürükle ya da örnek görseli dene.</div>
+
+  <div class="grid">
+    <section class="view">
+      <h2>Tam görsel ve kırpma alanları</h2>
+      <p>2560×1440 tuval üzerinde her cihazın gösterdiği bölüm.</p>
+      <div class="frame"><canvas id="full" width="1280" height="720"></canvas></div>
+      <div class="legend">
+        <span><i style="border-color:#fff"></i>TV: 2560×1440 (tamamı)</span>
+        <span><i style="border-color:#4fc3f7"></i>Masaüstü: 2560×423</span>
+        <span><i style="border-color:#ffb74d"></i>Tablet: 1855×423</span>
+        <span><i style="border-color:#69f0ae"></i>Güvenli alan / mobil: 1546×423</span>
+      </div>
+    </section>
+
+    <section class="view">
+      <h2>Masaüstü görünümü</h2>
+      <p>Geniş ekranda kanal sayfasının üstündeki şerit (2560×423).</p>
+      <div class="frame"><canvas id="desk" width="1280" height="212"></canvas></div>
+    </section>
+
+    <div class="row2">
+      <section class="view">
+        <h2>TV görünümü</h2>
+        <p>Televizyonda görselin tamamı arka plan olarak görünür.</p>
+        <div class="frame"><canvas id="tv" width="640" height="360"></canvas></div>
+      </section>
+      <section class="view">
+        <h2>Mobil görünüm</h2>
+        <p>Telefonda yalnızca güvenli alan (1546×423) kalır.</p>
+        <div class="phone">
+          <canvas id="mob" width="560" height="153"></canvas>
+          <div class="ch"><div class="av"></div><div style="flex:1"><div class="ln" style="width:70%"></div><div class="ln" style="width:45%"></div></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="view">
+      <h2>Tablet görünümü</h2>
+      <p>Tablette ortadaki 1855×423 bölüm.</p>
+      <div class="frame" style="max-width:780px"><canvas id="tab" width="928" height="212"></canvas></div>
+    </section>
+  </div>
+</main>
+<footer><p><a href="../">Gemini</a> · <a href="https://github.com/fatihlabsai/Gemini/tree/main/kanal-banner-onizleyici">Kaynak</a></p></footer>
+
+<script>
+const W = 2560, H = 1440;
+const AREAS = {
+  desk: {w: 2560, h: 423, color: '#4fc3f7'},
+  tab:  {w: 1855, h: 423, color: '#ffb74d'},
+  safe: {w: 1546, h: 423, color: '#69f0ae'}
+};
+const MIN_W = 2048, MIN_H = 1152, MAX_BYTES = 6 * 1024 * 1024;
+let img = null;
+
+const $ = id => document.getElementById(id);
+const rect = a => ({x: (W - a.w) / 2, y: (H - a.h) / 2, w: a.w, h: a.h});
+
+// Görseli 2560x1440 tuvale YouTube gibi "cover" ile yerleştir
+function drawSource(ctx, sx, sy, sw, sh, dw, dh) {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, dw, dh);
+  if (!img) return;
+  const s = Math.max(W / img.width, H / img.height);
+  const iw = img.width * s, ih = img.height * s;
+  const ox = (W - iw) / 2, oy = (H - ih) / 2;
+  const k = dw / sw;
+  ctx.drawImage(img, (ox - sx) * k, (oy - sy) * k, iw * k, ih * k);
+}
+
+function render() {
+  const guides = $('guides').checked;
+  // tam görünüm
+  const f = $('full'), fc = f.getContext('2d');
+  drawSource(fc, 0, 0, W, H, f.width, f.height);
+  if (img && guides) {
+    const k = f.width / W;
+    // güvenli alan dışını hafif karart
+    const sr = rect(AREAS.desk);
+    fc.fillStyle = 'rgba(0,0,0,.45)';
+    fc.fillRect(0, 0, f.width, sr.y * k);
+    fc.fillRect(0, (sr.y + sr.h) * k, f.width, f.height - (sr.y + sr.h) * k);
+    for (const key of ['desk', 'tab', 'safe']) {
+      const a = AREAS[key], r = rect(a);
+      fc.strokeStyle = a.color; fc.lineWidth = key === 'safe' ? 3 : 2;
+      fc.setLineDash(key === 'tab' ? [8, 6] : []);
+      fc.strokeRect(r.x * k + 1, r.y * k + 1, r.w * k - 2, r.h * k - 2);
+    }
+    fc.setLineDash([]);
+    fc.strokeStyle = '#fff'; fc.lineWidth = 2; fc.strokeRect(1, 1, f.width - 2, f.height - 2);
+    fc.font = '600 15px system-ui'; fc.fillStyle = '#69f0ae';
+    const s = rect(AREAS.safe);
+    fc.fillText('Güvenli alan', s.x * k + 8, s.y * k + 20);
+  }
+  for (const [id, key] of [['desk', 'desk'], ['tab', 'tab'], ['mob', 'safe']]) {
+    const c = $(id), r = rect(AREAS[key]);
+    drawSource(c.getContext('2d'), r.x, r.y, r.w, r.h, c.width, c.height);
+  }
+  const t = $('tv');
+  drawSource(t.getContext('2d'), 0, 0, W, H, t.width, t.height);
+}
+
+function check(w, h, bytes, name) {
+  const msgs = [], ratio = w / h, ok169 = Math.abs(ratio - 16 / 9) < 0.01;
+  let level = 'ok';
+  if (w < MIN_W || h < MIN_H) { level = 'err'; msgs.push(`Görsel çok küçük. YouTube en az <b>${MIN_W}×${MIN_H}</b> istiyor; bu dosya yüklenmez.`); }
+  if (!ok169) { if (level === 'ok') level = 'warn'; msgs.push(`Oran 16:9 değil (${ratio.toFixed(3)}:1). YouTube görseli kırpar; kenarlarda ya da üst-altta beklemediğin kayıplar olabilir.`); }
+  if (bytes && bytes > MAX_BYTES) { level = 'err'; msgs.push(`Dosya ${(bytes / 1048576).toFixed(1)} MB. Sınır <b>6 MB</b>.`); }
+  if (ok169 && w >= MIN_W && (w !== W || h !== H)) msgs.push(`Oran doğru ama önerilen ölçü <b>2560×1440</b>; bu ölçüde en net sonucu alırsın.`);
+  if (!msgs.length) msgs.push('Ölçü ve oran doğru. Önemli yazı ve logoyu yeşil güvenli alanın içinde tut.');
+  const info = $('info');
+  info.className = level;
+  const head = level === 'ok' ? '✓ Uygun' : level === 'warn' ? '⚠ Dikkat' : '✕ Sorun var';
+  info.innerHTML = `<b>${head}</b> · ${name} · ${w}×${h}${bytes ? ' · ' + (bytes / 1048576).toFixed(2) + ' MB' : ''}<br>` + msgs.join('<br>');
+}
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) { $('info').className = 'err'; $('info').textContent = 'Lütfen bir görsel dosyası seç (PNG, JPG, GIF, WEBP).'; return; }
+  const url = URL.createObjectURL(file);
+  const i = new Image();
+  i.onload = () => { img = i; check(i.width, i.height, file.size, file.name); render(); };
+  i.onerror = () => { $('info').className = 'err'; $('info').textContent = 'Görsel açılamadı.'; };
+  i.src = url;
+}
+
+function sample() {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#1a237e'); g.addColorStop(.5, '#6a1b9a'); g.addColorStop(1, '#ef6c00');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 40; i++) {
+    x.fillStyle = `rgba(255,255,255,${0.03 + (i % 5) * 0.01})`;
+    x.beginPath(); x.arc((i * 397) % W, (i * 233) % H, 60 + (i * 37) % 220, 0, 7); x.fill();
+  }
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.font = '700 70px system-ui'; x.textAlign = 'left';
+  x.fillText('Bu yazı mobilde kesilir', 120, 200);
+  x.textAlign = 'center'; x.fillStyle = '#fff'; x.font = '800 150px system-ui';
+  x.fillText('KANAL ADI', W / 2, H / 2 + 30);
+  x.font = '500 54px system-ui'; x.fillText('Her Salı yeni video', W / 2, H / 2 + 115);
+  const i = new Image();
+  i.onload = () => { img = i; check(W, H, 0, 'örnek görsel'); render(); };
+  i.src = c.toDataURL('image/png');
+}
+
+$('file').addEventListener('change', e => loadFile(e.target.files[0]));
+$('sample').addEventListener('click', sample);
+$('guides').addEventListener('change', render);
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); loadFile(e.dataTransfer.files[0]); });
+render();
+</script>
+</body>
+</html>
